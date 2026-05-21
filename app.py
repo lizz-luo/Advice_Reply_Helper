@@ -51,9 +51,9 @@ HELP_OPTIONS = {
 }
 
 MODE_DESCRIPTIONS = {
-    "content":      "💡 "Help me with what I wrote" — Get help on your ideas, advice, and tone.",
-    "language":     "🔤 "Help me with my words" — Get help on grammar, linking words, spelling, and more.",
-    "organisation": "📄 "Help me with how I set up my email" — Get help on greeting, paragraphs, sign-off, and more.",
+    "content":      "💡 Help me with what I wrote — Get help on your ideas, advice, and tone.",
+    "language":     "🔤 Help me with my words — Get help on grammar, linking words, spelling, and more.",
+    "organisation": "📄 Help me with how I set up my email — Get help on greeting, paragraphs, sign-off, and more.",
 }
 
 HELP_DESC_MAP = {
