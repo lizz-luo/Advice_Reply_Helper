@@ -32,7 +32,7 @@ HELP_OPTIONS = {
         {"value": "address_problem",  "label": "🎯 Address the problem   (= talk about the reader's problem)"},
         {"value": "two_advice",       "label": "💡 Two or more tips   (= give at least 2 pieces of advice)"},
         {"value": "explain_advice",   "label": "🔍 Explain your advice   (= say how each tip can help)"},
-        {"value": "caring_tone",      "label": "❤️Caring tone   (= kind, warm, friendly words)"},
+        {"value": "caring_tone",      "label": "❤️ Caring tone   (= kind, warm, friendly words)"},
     ],
     "language": [
         {"value": "modal_verbs",           "label": "💪 Modal verbs   (e.g. should, could, might)"},
@@ -51,9 +51,9 @@ HELP_OPTIONS = {
 }
 
 MODE_DESCRIPTIONS = {
-    "content":      "💡 "Help me with what I wrote" — Get help on your ideas, advice, and tone.",
-    "language":     "🔤 "Help me with my words" — Get help on grammar, linking words, spelling, and more.",
-    "organisation": "📄 "Help me with how I set up my email" — Get help on greeting, paragraphs, sign-off, and more.",
+    "content":      "💡 Help me with what I wrote — Get help on your ideas, advice, and tone.",
+    "language":     "🔤 Help me with my words — Get help on grammar, linking words, spelling, and more.",
+    "organisation": "📄 Help me with how I set up my email — Get help on greeting, paragraphs, sign-off, and more.",
 }
 
 HELP_DESC_MAP = {
