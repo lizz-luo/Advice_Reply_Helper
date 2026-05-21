@@ -20,7 +20,7 @@ HELP_HINTS = {
     "empathy_phrases":        "use: I understand how you feel…",
     "linking_words":          "use: firstly / moreover / in addition",
     "spelling_punctuation":   "check all spelling and full stops",
-    "power_words":            "use strong, expressive words instead of basic ones"
+    "power_words":            "use strong, expressive words instead of basic ones",
     "greeting_signoff":       "start with Dear… end with Best wishes…",
     "acknowledge_problem":    "show you understand their problem first",
     "separate_paragraphs":    "one idea per paragraph",
