@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 import streamlit as st
 from groq import Groq
 
-st.set_page_config(page_title="Advice Reply Helper", page_icon="✉️", layout="centered")
+st.set_page_config(page_title="Advice Reply Coach", page_icon="✉️", layout="centered")
 
 HKT = ZoneInfo("Asia/Hong_Kong")
 
@@ -20,7 +20,7 @@ HELP_HINTS = {
     "empathy_phrases":        "use: I understand how you feel…",
     "linking_words":          "use: firstly / moreover / in addition",
     "spelling_punctuation":   "check all spelling and full stops",
-    "power_words":            "use strong, expressive words instead of basic ones",
+    "strong_words": "use strong, expressive words instead of basic ones",
     "greeting_signoff":       "start with Dear… end with Best wishes…",
     "acknowledge_problem":    "show you understand their problem first",
     "separate_paragraphs":    "one idea per paragraph",
@@ -40,7 +40,7 @@ HELP_OPTIONS = {
         {"value": "empathy_phrases",       "label": "🤗 Did I use phrases to show I understand? (e.g. I understand how you feel)"},
         {"value": "linking_words",         "label": "🔗 Did I use words to join my ideas? (e.g. firstly, also, moreover)"},
         {"value": "spelling_punctuation",  "label": "✏ Are my spelling and punctuation correct? (e.g. ! ? , : .)"},
-        {"value": "power_words",           "label": "⚡ Did I use strong, expressive words instead of basic ones? (e.g. sad → upset, good → wonderful, happy → delighted)"},
+        {"value": "power word",            "label": "⚡ Did I use strong, expressive words instead of basic ones? (e.g. sad → upset, good → wonderful, happy → delighted)"},
     ],
     "organisation": [
         {"value": "greeting_signoff",    "label": "👋 Did I include a proper greeting and sign-off? (e.g. Dear… / Best wishes)"},
@@ -66,7 +66,7 @@ HELP_DESC_MAP = {
     "empathy_phrases":        "whether the student used phrases to show empathy (e.g. I understand how you feel)",
     "linking_words":          "whether the student used appropriate linking words (e.g. firstly, moreover, in addition)",
     "spelling_punctuation":   "whether spelling and punctuation are correct throughout",
-    "power_words":            "whether the student used strong, expressive vocabulary instead of basic words where appropriate",
+    "strong_words": "whether the student used strong, expressive vocabulary instead of basic words where appropriate",
     "greeting_signoff":       "whether the student included a proper greeting and sign-off",
     "acknowledge_problem":    "whether the student acknowledged the reader's problem in the opening",
     "separate_paragraphs":    "whether each piece of advice is in its own paragraph",
@@ -98,6 +98,15 @@ def init_state():
         "interaction_count":  0,
         "step1_confirmed":    False,
         "step2_confirmed":    False,
+        "show_save_log_dialog": False,
+        "save_log_requested": False,
+        "run_feedback_now": False,
+        "clear_writing_on_next_run": False,
+        "reset_after_step2_on_next_run": False,
+        "reset_from_step3_on_next_run": False,
+        "scroll_to_step": "",
+        "session_history_expanded": False,
+        "trigger_auto_download": False,
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -127,7 +136,7 @@ def build_prompt(writing, student_name, mode, help_values, custom_q):
     goals_block = "\n".join(goals_desc_lines) if goals_desc_lines else ""
 
     prompt = (
-        f"You are a friendly Advice Reply Helper for primary school students aged 10-11. "
+        f"You are a friendly Advice Reply Coach for primary school students aged 10-11. "
         f"Student name: {student_name}. Feedback category: {category_name}.\n"
         "The student has written an ADVICE REPLY EMAIL — a friendly email responding to someone who asked for help with a problem.\n\n"
         "=== STRICT RULES ===\n"
@@ -246,13 +255,24 @@ def escape_html(s: str) -> str:
 
 def do_reset_after_step2():
     st.session_state["selected_mode"] = "content"
-    st.session_state["help_values"]   = []
+    st.session_state["help_values"] = []
     st.session_state["custom_question"] = ""
-    st.session_state["feedback_text"]   = ""
+    st.session_state["feedback_text"] = ""
+    st.session_state["show_save_log_dialog"] = False
+    st.session_state["save_log_requested"] = False
+    st.session_state["run_feedback_now"] = False
+
+
+def do_reset_from_step3():
+    st.session_state["help_values"] = []
+    st.session_state["custom_question"] = ""
+    st.session_state["feedback_text"] = ""
+    st.session_state["show_save_log_dialog"] = False
+    st.session_state["save_log_requested"] = False
+    st.session_state["run_feedback_now"] = False
 
 
 def do_clear():
-    st.session_state["writing_input"]      = ""
     st.session_state["selected_mode"]      = "content"
     st.session_state["help_values"]        = []
     st.session_state["custom_question"]    = ""
@@ -261,6 +281,9 @@ def do_clear():
     st.session_state["interaction_count"]  = 0
     st.session_state["step1_confirmed"]    = False
     st.session_state["step2_confirmed"]    = False
+    st.session_state["show_save_log_dialog"] = False
+    st.session_state["save_log_requested"] = False
+    st.session_state["run_feedback_now"] = False
 
 
 def download_log_html() -> bytes:
@@ -279,7 +302,7 @@ h1{text-align:center;color:#0369a1;margin-bottom:4px}.subtitle{text-align:center
 .sample{background:#f8fbff;border:1px solid #dbeafe;padding:12px 14px;border-radius:8px;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
 table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}th{background:#0ea5e9;color:#fff;padding:10px;text-align:left}td{padding:10px;border-bottom:1px solid #dbeafe;vertical-align:top}tr:nth-child(even) td{background:#f8fbff}
 </style></head><body>""",
-        "<h1>✉️ Advice Reply Helper</h1><div class='subtitle'>Learning Log</div>",
+        "<h1>✉️ Advice Reply Coach</h1><div class='subtitle'>Learning Log</div>",
         "<div class='info'>",
         f"<p><strong>Student:</strong> {escape_html(name)}</p>",
     ]
@@ -315,143 +338,148 @@ table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}th{backgr
 
 init_state()
 
-if st.session_state.pop("_do_reset_after_step2", False):
+if st.session_state.pop("_do_reset_after_step2", False) or st.session_state.pop("reset_after_step2_on_next_run", False):
     do_reset_after_step2()
+if st.session_state.pop("_do_reset_from_step3", False) or st.session_state.pop("reset_from_step3_on_next_run", False):
+    do_reset_from_step3()
 if st.session_state.pop("_do_clear", False):
     do_clear()
+if st.session_state.pop("clear_writing_on_next_run", False):
+    st.session_state["writing_input"] = ""
+    st.session_state["step2_confirmed"] = False
+
+scroll_target = st.session_state.pop("scroll_to_step", "")
+trigger_auto_download = st.session_state.pop("trigger_auto_download", False)
 
 st.markdown(
     """
 <style>
 :root {
-    color-scheme: light dark;
-    --bg: #f0f9ff;
-    --bg-soft: #f8fafc;
-    --panel: #f3f4f6;
-    --panel-border: #dbe4ee;
-    --text: #0f172a;
-    --muted: #475569;
-    --accent: #0369a1;
-    --accent-strong: #0284c7;
-    --accent-soft: #e0f2fe;
-    --input-bg: #ffffff;
-    --code-bg: #ffffff;
-    --button-text: #ffffff;
-    --secondary-bg: #ffffff;
-    --secondary-text: #0f172a;
-    --secondary-border: #cbd5e1;
-    --shadow: 0 2px 12px rgba(14, 165, 233, 0.08);
+    --bg: #f0f9ff; --bg-soft: #f8fafc; --panel: #f3f4f6;
+    --panel-border: #e2e8f0; --text: #0f172a; --muted: #475569;
+    --accent: #0369a1; --accent-soft: #e0f2fe;
+    --input-bg: #ffffff; --code-bg: #ffffff;
 }
 @media (prefers-color-scheme: dark) {
     :root {
-        --bg: #0f172a;
-        --bg-soft: #111827;
-        --panel: #1f2937;
-        --panel-border: #334155;
-        --text: #f8fafc;
-        --muted: #cbd5e1;
-        --accent: #7dd3fc;
-        --accent-strong: #38bdf8;
-        --accent-soft: #082f49;
-        --input-bg: #111827;
-        --code-bg: #0b1220;
-        --button-text: #082f49;
-        --secondary-bg: #111827;
-        --secondary-text: #f8fafc;
-        --secondary-border: #475569;
-        --shadow: 0 2px 12px rgba(0, 0, 0, 0.28);
+        --bg: #0f172a; --bg-soft: #111827; --panel: #1f2937;
+        --panel-border: #334155; --text: #f8fafc; --muted: #cbd5e1;
+        --accent: #7dd3fc; --accent-soft: #082f49;
+        --input-bg: #111827; --code-bg: #0b1220;
     }
 }
-html, body, [data-testid="stAppViewContainer"], .stApp {
-    background: linear-gradient(160deg, var(--bg) 0%, var(--bg-soft) 100%) !important;
-    color: var(--text) !important;
-}
-.stApp { color: var(--text) !important; }
+.stApp { background: linear-gradient(160deg, var(--bg) 0%, var(--bg-soft) 100%); color: var(--text); }
 .block-container { max-width: 760px; padding-top: 2rem; padding-bottom: 4rem; }
 .panel, .hero {
-    background: var(--panel) !important;
-    border: 1px solid var(--panel-border) !important;
-    border-radius: 18px;
-    box-shadow: var(--shadow);
-    color: var(--text) !important;
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 18px; box-shadow: 0 2px 12px rgba(14,165,233,0.06); color: var(--text);
 }
 .hero  { padding: 1.8rem 1.5rem; margin-bottom: 1rem; text-align: center; }
 .panel { padding: 1.25rem 1.25rem 0.5rem; margin-bottom: 1rem; }
-.small-note { color: var(--muted) !important; font-size: 0.92rem; margin: 0; }
-.hint-text  { color: var(--muted) !important; font-size: 0.82rem; margin: 0.35rem 0 0 0; font-style: italic; }
+.small-note { color: var(--muted); font-size: 0.92rem; margin: 0; }
+.hint-text  { color: var(--muted); font-size: 0.82rem; margin: 0.35rem 0 0 0; font-style: italic; }
 .badge { display:inline-block; padding:0.35rem 0.9rem; border-radius:999px; font-size:0.82rem; font-weight:700;
-         background:var(--accent-soft) !important; color:var(--accent) !important; border:1px solid var(--panel-border) !important; margin-bottom:0.75rem; }
+         background:var(--accent-soft); color:var(--accent); border:1px solid var(--panel-border); margin-bottom:0.75rem; }
 .help-chip, .history-meta { display:inline-block; padding:0.28rem 0.65rem; border-radius:999px; font-size:0.78rem;
-         font-weight:700; background:var(--accent-soft) !important; color:var(--accent) !important; border:1px solid var(--panel-border) !important; margin:0 0.4rem 0.3rem 0; }
+         font-weight:700; background:var(--accent-soft); color:var(--accent); border:1px solid var(--panel-border); margin:0 0.4rem 0.3rem 0; }
 input, textarea, .stTextInput input, .stTextArea textarea,
 div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea,
-div[data-baseweb="base-input"] input, div[data-baseweb="select"] > div:first-child,
-.stMultiSelect [data-baseweb="tag"], .stSelectbox [data-baseweb="select"] > div {
-    background-color: var(--input-bg) !important;
-    color: var(--text) !important;
-    border-color: var(--panel-border) !important;
+div[data-baseweb="base-input"] input, div[data-baseweb="select"] > div:first-child {
+    background-color: var(--input-bg) !important; color: var(--text) !important;
 }
-textarea::placeholder, input::placeholder { color: var(--muted) !important; opacity: 1 !important; }
+textarea::placeholder, input::placeholder { color: var(--muted) !important; }
 label, .stMarkdown, .stCaption, .stRadio, .stMultiSelect, .stSelectbox,
-.stTextInput, .stTextArea, .stExpander, .stAlert, .stSubheader, .stText {
-    color: var(--text) !important;
-}
+.stTextInput, .stTextArea, .stExpander, .stAlert { color: var(--text) !important; }
 hr, [data-testid="stDivider"] { border-color: var(--panel-border) !important; background-color: var(--panel-border) !important; }
-.feedback-box, .history-card { background: var(--input-bg) !important; border: 1px solid var(--panel-border) !important; border-radius: 14px; color: var(--text) !important; }
+.feedback-box, .history-card { background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 14px; }
 .feedback-box { padding: 1rem 1.1rem; margin-top: 0.5rem; }
 .history-card { padding: 1rem 1rem 0.5rem; margin-bottom: 0.85rem; }
-.next-step-btn > div > button,
-.stButton > button[kind="primary"], button[kind="primary"] {
-    background: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important;
-    color: #ffffff !important;
-    border: 1px solid transparent !important;
-    font-weight: 700 !important;
-    border-radius: 10px !important;
+.next-step-btn > div > button {
+    background: linear-gradient(135deg, #0ea5e9, #0284c7) !important;
+    color: #ffffff !important; border: none !important; font-weight: 700 !important;
 }
 @media (prefers-color-scheme: dark) {
-    .next-step-btn > div > button,
-    .stButton > button[kind="primary"], button[kind="primary"] {
+    .next-step-btn > div > button {
         background: linear-gradient(135deg, #38bdf8, #0ea5e9) !important;
-        color: #082f49 !important;
-        border-color: #38bdf8 !important;
-        box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.2) inset !important;
+        color: #ffffff !important;
     }
 }
-.stButton > button[kind="secondary"], button[kind="secondary"], .stDownloadButton > button {
-    background: var(--secondary-bg) !important;
-    color: var(--secondary-text) !important;
-    border: 1px solid var(--secondary-border) !important;
-    border-radius: 10px !important;
-    font-weight: 700 !important;
-}
-[data-testid="stExpander"] {
-    background: transparent !important;
-    border: 1px solid var(--panel-border) !important;
-    border-radius: 14px !important;
-}
-[data-testid="stExpander"] summary,
-[data-testid="stExpander"] details,
-[data-testid="stExpander"] * {
-    color: var(--text) !important;
-}
-table, th, td { color: var(--text) !important; border-color: var(--panel-border) !important; }
-th { background: var(--accent-soft) !important; color: var(--text) !important; }
-code, pre { background: var(--code-bg) !important; color: var(--text) !important; }
-a { color: var(--accent) !important; }
-.goal-hint { font-size: 0.78rem; color: var(--muted) !important; margin-top: 0.15rem; padding-left: 0.1rem; }
-.footer-note { text-align:center; color: var(--muted) !important; font-size:0.85rem; margin-top:2rem; padding-bottom:1rem; }
+.goal-hint { font-size: 0.78rem; color: var(--muted); margin-top: 0.15rem; padding-left: 0.1rem; }
+.footer-note { text-align:center; color: var(--muted); font-size:0.85rem; margin-top:2rem; padding-bottom:1rem; }
 </style>
 """,
     unsafe_allow_html=True,
 )
 
+if scroll_target or trigger_auto_download:
+    scroll_script = f"""
+    <script>
+    (function() {{
+      const targetId = {repr('{SCROLL_PLACEHOLDER}')};
+      const doDownload = {'true' if trigger_auto_download else 'false'};
+      const parentWin = window.parent || window;
+      const parentDoc = parentWin.document || document;
+
+      function scrollToTarget() {{
+        if (!targetId) return;
+
+        const iframe = window.frameElement;
+        const localTarget = document.getElementById(targetId);
+        if (localTarget) {{
+          try {{ localTarget.scrollIntoView({{behavior: 'auto', block: 'start'}}); }} catch (e) {{}}
+        }}
+
+        try {{
+          if (parentWin.location.hash !== '#' + targetId) {{
+            parentWin.location.hash = targetId;
+          }}
+        }} catch (e) {{}}
+
+        try {{
+          const anchorInParent = parentDoc.getElementById(targetId);
+          if (anchorInParent) {{
+            anchorInParent.scrollIntoView({{behavior: 'auto', block: 'start'}});
+            return;
+          }}
+        }} catch (e) {{}}
+
+        try {{
+          if (iframe && localTarget) {{
+            const frameRect = iframe.getBoundingClientRect();
+            const targetRect = localTarget.getBoundingClientRect();
+            const absoluteTop = (parentWin.scrollY || parentWin.pageYOffset || 0) + frameRect.top + targetRect.top - 24;
+            parentWin.scrollTo(0, Math.max(absoluteTop, 0));
+          }}
+        }} catch (e) {{}}
+      }}
+
+      function triggerDownloadOnce() {{
+        if (!doDownload || parentWin.__saveLogAutoClicked) return;
+        const buttons = Array.from(parentDoc.querySelectorAll('button'));
+        const saveBtn = buttons.find(btn => btn.innerText && btn.innerText.includes('Save Learning Log'));
+        if (saveBtn) {{
+          parentWin.__saveLogAutoClicked = true;
+          saveBtn.click();
+        }}
+      }}
+
+      [120, 350, 800, 1400].forEach((delay) => {{
+        setTimeout(() => {{
+          scrollToTarget();
+          triggerDownloadOnce();
+        }}, delay);
+      }});
+    }})();
+    </script>
+    """.replace('{SCROLL_PLACEHOLDER}', scroll_target)
+    st.components.v1.html(scroll_script, height=0, width=0)
 # ── Header ───────────────────────────────────────────────────────────────────
 st.markdown(
     """
 <div class='hero'>
-  <div class='badge'>✉️ Advice Reply Helper</div>
-  <h1 style='margin:0 0 0.35rem 0; color: var(--text);'>Advice Reply Helper</h1>
-  <p class='small-note' style='font-style:italic;font-weight:600;'>Your Friendly Helper for Writing a Better Reply!</p>
+  <div class='badge'>✉️ Advice Reply Coach</div>
+  <h1 style='margin:0 0 0.35rem 0; color: var(--text);'>Advice Reply Coach</h1>
+  <p class='small-note' style='font-style:italic;font-weight:600;'>Your Friendly Coach for Writing a Better Reply!</p>
 </div>
 """,
     unsafe_allow_html=True,
@@ -485,7 +513,7 @@ st.markdown("</div>", unsafe_allow_html=True)
 step1_ok = st.session_state.get("step1_confirmed", False)
 
 # ── Step 2 ───────────────────────────────────────────────────────────────────
-st.markdown("<div class='panel'>", unsafe_allow_html=True)
+st.markdown("<div id='step2-anchor'></div><div class='panel'>", unsafe_allow_html=True)
 st.subheader("✍️ Step 2 — Your Advice Reply Email")
 if not step1_ok:
     st.info("Please complete Step 1 first.")
@@ -522,7 +550,7 @@ st.markdown("</div>", unsafe_allow_html=True)
 step2_ok = st.session_state.get("step2_confirmed", False)
 
 # ── Step 3 ───────────────────────────────────────────────────────────────────
-st.markdown("<div class='panel'>", unsafe_allow_html=True)
+st.markdown("<div id='step3-anchor'></div><div class='panel'>", unsafe_allow_html=True)
 st.subheader("🎯 Step 3 — What Would You Like Help With?")
 if not step2_ok:
     st.info("Please complete Step 2 first.")
@@ -586,13 +614,7 @@ st.text_area(
 st.markdown("</div>", unsafe_allow_html=True)
 
 # ── Submit ───────────────────────────────────────────────────────────────────
-col_a, col_b = st.columns([3, 1])
-with col_a:
-    submit = st.button("📨 Get Feedback", type="primary", use_container_width=True, disabled=not step3_ok)
-with col_b:
-    if st.button("🧹 Clear", use_container_width=True):
-        st.session_state["_do_clear"] = True
-        st.rerun()
+submit = st.button("📨 Get Feedback", type="primary", use_container_width=True, disabled=not step3_ok)
 
 if submit:
     writing  = st.session_state.get("writing_input",  "").strip()
@@ -626,8 +648,27 @@ if submit:
                     "response":     feedback,
                 }
             )
+            st.session_state["show_save_log_dialog"] = True
+            st.rerun()
         except Exception as e:
             st.error(f"Groq API error: {e}")
+
+if st.session_state.get("show_save_log_dialog", False):
+    @st.dialog("Save Learning Log?")
+    def save_log_dialog():
+        st.write("Would you like to save your learning log now?")
+        yes_col, later_col = st.columns(2)
+        with yes_col:
+            if st.button("Yes", use_container_width=True, key="save_log_yes"):
+                st.session_state["save_log_requested"] = True
+                st.session_state["trigger_auto_download"] = True
+                st.session_state["show_save_log_dialog"] = False
+                st.rerun()
+        with later_col:
+            if st.button("Later", use_container_width=True, key="save_log_later"):
+                st.session_state["show_save_log_dialog"] = False
+                st.rerun()
+    save_log_dialog()
 
 # ── Feedback ─────────────────────────────────────────────────────────────────
 if st.session_state.get("feedback_text"):
@@ -648,14 +689,22 @@ if st.session_state.get("interaction_history"):
     with nx1:
         if st.button("🎯 Try Another Checklist Goal", use_container_width=True,
                      help="Keep the same email — choose different goals"):
-            st.session_state["_do_reset_after_step2"] = True
+            st.session_state["reset_from_step3_on_next_run"] = True
+            st.session_state["session_history_expanded"] = False
+            st.session_state["scroll_to_step"] = "step3-anchor"
             st.rerun()
     with nx2:
         if st.button("✏️ Review a New Part of My Email", use_container_width=True,
-                     help="Keep your current email and reset from Step 3 onward"):
-            st.session_state["_do_reset_after_step2"] = True
+                     help="Go back to Step 2, clear the email box, and reset later steps"):
+            st.session_state["clear_writing_on_next_run"] = True
+            st.session_state["reset_after_step2_on_next_run"] = True
+            st.session_state["session_history_expanded"] = False
+            st.session_state["scroll_to_step"] = "step2-anchor"
             st.rerun()
 
+    if st.session_state.get("save_log_requested", False):
+        st.info("Your learning log is ready. Please click Save Learning Log below.")
+        st.session_state["save_log_requested"] = False
     st.download_button(
         "💾 Save Learning Log",
         data=download_log_html(),
@@ -666,7 +715,7 @@ if st.session_state.get("interaction_history"):
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ── Session History ───────────────────────────────────────────────────────────
-with st.expander("🧾 Session History"):
+with st.expander("🧾 Session History", expanded=st.session_state.get("session_history_expanded", False)):
     history = st.session_state.get("interaction_history", [])
     if not history:
         st.write("No feedback sessions yet.")
