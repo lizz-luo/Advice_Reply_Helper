@@ -49,9 +49,9 @@ HELP_OPTIONS = {
 }
 
 MODE_DESCRIPTIONS = {
-    "content":      "💡 "Help me with what I wrote" — Get help on your ideas, advice, and tone.",
-    "language":     "🔤 "Help me with my words" — Get help on grammar, linking words, spelling, and more.",
-    "organisation": "📄 "Help me with how I set up my email" — Get help on greeting, paragraphs, sign-off, and more.",
+    "content":      "💡 \"Help me with what I wrote\" — Get help on your ideas, advice, and tone.",
+    "language":     "🔤 \"Help me with my words\" — Get help on grammar, linking words, spelling, and more.",
+    "organisation": "📄 \"Help me with how I set up my email\" — Get help on greeting, paragraphs, sign-off, and more.",
 }
 
 HELP_DESC_MAP = {
@@ -497,7 +497,7 @@ st.markdown(
 st.text_area(
     " ",
     key="writing_input",
-    placeholder="Paste your advice reply email here, or just the part you want help with...",
+    placeholder="Paste your whole email here, or just the part you want feedback on...",
     height=220,
     disabled=not step1_ok,
 )
