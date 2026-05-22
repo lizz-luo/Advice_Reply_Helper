@@ -166,7 +166,6 @@ def build_prompt(writing, student_name, mode, help_values, custom_q):
         "- What You Did Well: ONE specific, genuine example from the student's writing. Quote their words if possible. Keep it to 1 sentence.\n"
         "- Weakness: ONE honest, specific weakness in that area. Be direct but kind. 1 sentence only. If the student did well, write 'No major weakness — keep it up!'.\n"
         "- Tip: ONE short, clear, actionable tip to fix the weakness. Max 1-2 sentences. Simple words only.\n\n"
-        "--- END TABLE ---\n\n"
         "=== PART 2: HOW TO MAKE IT BETTER ===\n"
         "After the table, write a section with this exact heading: ✏️ How to Make It Better\n"
         "For EACH checklist goal reviewed, provide TWO concrete before-and-after examples.\n"
@@ -230,6 +229,29 @@ def get_ai_feedback(prompt: str) -> str:
     return format_feedback_output(post_process_feedback(raw))
 
 
+def llm_detect_write_for_me(custom_q: str) -> bool:
+    if not custom_q.strip():
+        return False
+    try:
+        client = get_groq_client()
+        check_prompt = (
+            "You are a safeguard for a primary school writing tool. "
+            "Decide whether the student is asking the AI to write, complete, rewrite, or finish their work for them, rather than asking for feedback or tips. "
+            f'Student question: "{custom_q}"\n'
+            "Reply with ONLY one word: YES or NO."
+        )
+        resp = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            temperature=0,
+            max_tokens=5,
+            messages=[{"role": "user", "content": check_prompt}],
+        )
+        answer = resp.choices[0].message.content.strip().upper()
+        return answer.startswith("YES")
+    except Exception:
+        return False
+
+
 def format_feedback_output(text: str) -> str:
     t = (text or "").replace("
 ", "
@@ -243,15 +265,9 @@ def format_feedback_output(text: str) -> str:
     table_lines = []
     for ln in table_part.splitlines():
         s = ln.strip()
-        if not s:
-            continue
         if s.startswith("|"):
             table_lines.append(s)
-    # keep only the table rows and header
-    clean_table = []
-    for ln in table_lines:
-        if ln.count("|") >= 3:
-            clean_table.append(ln)
+    clean_table = [ln for ln in table_lines if ln.count("|") >= 3]
     if not clean_table:
         clean_table = table_lines
     ex = rest.strip()
@@ -289,7 +305,8 @@ def llm_detect_write_for_me(custom_q: str) -> bool:
         check_prompt = (
             "You are a safeguard for a primary school writing tool. "
             "Decide whether the student is asking the AI to write, complete, rewrite, or finish their work for them, rather than asking for feedback or tips. "
-            f'Student question: "{custom_q}"\n'
+            f'Student question: "{custom_q}"
+'
             "Reply with ONLY one word: YES or NO."
         )
         resp = client.chat.completions.create(
@@ -302,7 +319,6 @@ def llm_detect_write_for_me(custom_q: str) -> bool:
         return answer.startswith("YES")
     except Exception:
         return False
-
 
 def escape_html(s: str) -> str:
     return html.escape(s or "")
