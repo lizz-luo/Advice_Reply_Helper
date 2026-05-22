@@ -204,22 +204,18 @@ def get_groq_client():
         raise ValueError("GROQ_API_KEY is not set in Streamlit secrets.")
     return Groq(api_key=api_key)
 
-
 def post_process_feedback(text: str) -> str:
     return (text or "").strip()
 
 
 def format_feedback_output(text: str) -> str:
-    t = (text or "").replace("
-", "
-").strip()
+    t = (text or "").replace("\r\n", "\n").strip()
     if "--- END TABLE ---" in t:
         table_part, rest = t.split("--- END TABLE ---", 1)
     elif "✏️ How to Make It Better" in t:
         table_part, rest = t.split("✏️ How to Make It Better", 1)
     else:
         return t
-
     table_lines = []
     for ln in table_part.splitlines():
         s = ln.strip()
@@ -228,32 +224,16 @@ def format_feedback_output(text: str) -> str:
     clean_table = [ln for ln in table_lines if ln.count("|") >= 3]
     if not clean_table:
         clean_table = table_lines
-
     ex = rest.strip()
     if "✏️ How to Make It Better" in ex:
         ex = ex.split("✏️ How to Make It Better", 1)[1].strip()
     for marker in ["📌", "Example 1:", "Example 2:", "❌", "✅", "💡"]:
-        ex = ex.replace(marker, "
-" + marker)
-    while "
-
-
-" in ex:
-        ex = ex.replace("
-
-
-", "
-
-")
-
-    out = "
-".join(clean_table).strip()
+        ex = ex.replace(marker, "\n" + marker)
+    while "\n\n\n" in ex:
+        ex = ex.replace("\n\n\n", "\n\n")
+    out = "\n".join(clean_table).strip()
     if ex:
-        out += "
-
-✏️ How to Make It Better
-
-" + ex.strip()
+        out += "\n\n✏️ How to Make It Better\n\n" + ex.strip()
     return out.strip()
 
 
@@ -265,13 +245,14 @@ def get_ai_feedback(prompt: str) -> str:
         messages=[
             {
                 "role": "system",
-                "content": "You are a helpful encouraging writing coach for primary school students aged 10-11. Follow the user prompt exactly and return concise markdown.",
+                "content": "You are a helpful encouraging writing coach for primary school students aged 10-11. Follow the user prompt exactly and return concise markdown. When writing examples with lines starting with negative, positive, and idea markers, always put each on its own separate line. Never merge them into one paragraph.",
             },
             {"role": "user", "content": prompt},
         ],
     )
+     
     raw = completion.choices[0].message.content.strip()
-    return format_feedback_output(post_process_feedback(raw))
+    return post_process_feedback(raw)
 
 
 def llm_detect_write_for_me(custom_q: str) -> bool:
@@ -282,8 +263,7 @@ def llm_detect_write_for_me(custom_q: str) -> bool:
         check_prompt = (
             "You are a safeguard for a primary school writing tool. "
             "Decide whether the student is asking the AI to write, complete, rewrite, or finish their work for them, rather than asking for feedback or tips. "
-            f'Student question: "{custom_q}"
-'
+            f'Student question: "{custom_q}"\n'
             "Reply with ONLY one word: YES or NO."
         )
         resp = client.chat.completions.create(
@@ -296,6 +276,10 @@ def llm_detect_write_for_me(custom_q: str) -> bool:
         return answer.startswith("YES")
     except Exception:
         return False
+
+
+def escape_html(s: str) -> str:
+    return html.escape(s or "")
 
 
 def do_reset_after_step2():
