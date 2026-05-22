@@ -166,7 +166,7 @@ def build_prompt(writing, student_name, mode, help_values, custom_q):
         "- What You Did Well: ONE specific, genuine example from the student's writing. Quote their words if possible. Keep it to 1 sentence.\n"
         "- Weakness: ONE honest, specific weakness in that area. Be direct but kind. 1 sentence only. If the student did well, write 'No major weakness — keep it up!'.\n"
         "- Tip: ONE short, clear, actionable tip to fix the weakness. Max 1-2 sentences. Simple words only.\n\n"
-        "=== PART 2: HOW TO MAKE IT BETTER ===\n"
+        "=== PART 2: HOW TO MAKE IT BETTER ===\n" "Output ONLY this section after the table. Do not repeat the table.\n"
         "After the table, write a section with this exact heading: ✏️ How to Make It Better\n"
         "For EACH checklist goal reviewed, provide TWO concrete before-and-after examples.\n"
         "Use this exact format for every example:\n\n"
@@ -205,10 +205,6 @@ def get_groq_client():
     return Groq(api_key=api_key)
 
 def post_process_feedback(text: str) -> str:
-    markers = ["❌", "✅", "💡", "📌", "Example 1:", "Example 2:"]
-    for m in markers:
-        text = text.replace(m, f"\n\n{m}")
-    text = re.sub(r'\n{3,}', '\n\n', text)
     return text.strip()
 
 def get_ai_feedback(prompt: str) -> str:
