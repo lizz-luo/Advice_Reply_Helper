@@ -107,7 +107,6 @@ def init_state():
         "scroll_to_step": "",
         "session_history_expanded": False,
         "trigger_auto_download": False,
-        "show_feedback_celebration": False,
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -417,28 +416,11 @@ hr, [data-testid="stDivider"] { border-color: var(--panel-border) !important; ba
     50% { transform: translateY(-8px) rotate(-4deg); }
     100% { transform: translateY(0px) rotate(0deg); }
 }
-.celebrate-wrap { position: relative; height: 0; overflow: visible; z-index: 2; }
-.celebrate-layer { position: relative; height: 0; pointer-events: none; }
-.celebrate-emoji {
-    position: absolute; top: -6px; font-size: 1.55rem; opacity: 0;
-    animation: risePop 2.8s ease-out forwards;
-    will-change: transform, opacity;
-}
-.celebrate-emoji.c1 { left: 8%; animation-delay: 0.00s; }
-.celebrate-emoji.c2 { left: 20%; animation-delay: 0.10s; }
-.celebrate-emoji.c3 { left: 34%; animation-delay: 0.20s; }
-.celebrate-emoji.c4 { left: 48%; animation-delay: 0.05s; }
-.celebrate-emoji.c5 { left: 62%; animation-delay: 0.18s; }
-.celebrate-emoji.c6 { left: 76%; animation-delay: 0.08s; }
-.celebrate-emoji.c7 { left: 88%; animation-delay: 0.24s; }
-@keyframes risePop {
-    0% { transform: translateY(8px) scale(0.7) rotate(0deg); opacity: 0; }
-    15% { opacity: 1; }
-    100% { transform: translateY(-95px) scale(1.08) rotate(10deg); opacity: 0; }
-}
 @media (prefers-reduced-motion: reduce) {
-    .floating-emoji, .celebrate-emoji { animation: none !important; }
+    .floating-emoji { animation: none !important; }
 }
+.step-emoji { display:inline-block; margin-right:0.2rem; }
+
 
 </style>
 """,
@@ -525,7 +507,7 @@ st.markdown(
 
 # ── Step 1 ───────────────────────────────────────────────────────────────────
 st.markdown("<div class='panel'>", unsafe_allow_html=True)
-st.subheader("👋 Step 1 — About You")
+st.markdown("<h3><span class='floating-emoji step-emoji'>👋</span>Step 1 — About You</h3>", unsafe_allow_html=True)
 c1, c2, c3 = st.columns(3)
 with c1:
     st.text_input("First Name",   key="student_name",   placeholder="e.g. Sarah")
@@ -552,7 +534,7 @@ step1_ok = st.session_state.get("step1_confirmed", False)
 
 # ── Step 2 ───────────────────────────────────────────────────────────────────
 st.markdown("<div id='step2-anchor'></div><div class='panel'>", unsafe_allow_html=True)
-st.subheader("✍️ Step 2 — Your Advice Reply Email")
+st.markdown("<h3><span class='floating-emoji step-emoji'>✍️</span>Step 2 — Your Advice Reply Email</h3>", unsafe_allow_html=True)
 if not step1_ok:
     st.info("Please complete Step 1 first.")
 
@@ -589,7 +571,7 @@ step2_ok = st.session_state.get("step2_confirmed", False)
 
 # ── Step 3 ───────────────────────────────────────────────────────────────────
 st.markdown("<div id='step3-anchor'></div><div class='panel'>", unsafe_allow_html=True)
-st.subheader("🎯Step 3 —What Do You Need Help With?")
+st.markdown("<h3><span class='floating-emoji step-emoji'>🎯</span>Step 3 — What Do You Need Help With?</h3>", unsafe_allow_html=True)
 if not step2_ok:
     st.info("Please complete Step 2 first.")
 
@@ -622,7 +604,7 @@ if valid_vals != current_vals:
 
 # ── Step 4 ───────────────────────────────────────────────────────────────────
 st.markdown("<div class='panel'>", unsafe_allow_html=True)
-st.subheader("📋 Step 4 — Pick Your Goals")
+st.markdown("<h3><span class='floating-emoji step-emoji'>📋</span>Step 4 — Pick Your Goals</h3>", unsafe_allow_html=True)
 if not step3_ok:
     st.info("Please complete Step 2 and choose a category first.")
 else:
@@ -641,7 +623,7 @@ st.markdown("</div>", unsafe_allow_html=True)
 
 # ── Step 5 ───────────────────────────────────────────────────────────────────
 st.markdown("<div class='panel'>", unsafe_allow_html=True)
-st.subheader("💬 Step 5 — Ask Your Own Question *(optional)*")
+st.markdown("<h3><span class='floating-emoji step-emoji'>💬</span>Step 5 — Ask Your Own Question <em>(optional)</em></h3>", unsafe_allow_html=True)
 st.text_area(
     "Do you have a question about your email?",
     key="custom_question",
@@ -687,7 +669,6 @@ if submit:
                 }
             )
             st.session_state["show_save_log_dialog"] = True
-            st.session_state["show_feedback_celebration"] = True
             st.rerun()
         except Exception as e:
             st.error(f"Groq API error: {e}")
@@ -711,22 +692,8 @@ if st.session_state.get("show_save_log_dialog", False):
 
 # ── Feedback ─────────────────────────────────────────────────────────────────
 if st.session_state.get("feedback_text"):
-    if st.session_state.pop("show_feedback_celebration", False):
-        st.markdown("""
-        <div class='celebrate-wrap'>
-          <div class='celebrate-layer'>
-            <span class='celebrate-emoji c1'>🌟</span>
-            <span class='celebrate-emoji c2'>💡</span>
-            <span class='celebrate-emoji c3'>✨</span>
-            <span class='celebrate-emoji c4'>🎉</span>
-            <span class='celebrate-emoji c5'>📘</span>
-            <span class='celebrate-emoji c6'>⭐</span>
-            <span class='celebrate-emoji c7'>🎈</span>
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
     st.markdown("<div class='panel'>", unsafe_allow_html=True)
-    st.subheader("✨ Your Feedback")
+    st.markdown("<h3><span class='floating-emoji step-emoji'>✨</span>Your Feedback</h3>", unsafe_allow_html=True)
     count = st.session_state["interaction_count"]
     st.markdown(f"<span class='help-chip'>💬 {count} interaction{'s' if count != 1 else ''}</span>", unsafe_allow_html=True)
     st.markdown("<div class='feedback-box'>", unsafe_allow_html=True)
