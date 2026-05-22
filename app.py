@@ -222,14 +222,19 @@ def format_feedback_output(text: str) -> str:
         ex = ex.split("✏️ How to Make It Better", 1)[1].strip()
     ex_lines = [ln.strip() for ln in ex.splitlines() if ln.strip()]
     fixed_ex = chr(10).join(ex_lines)
-    for marker in ["📌", "Example 1:", "Example 2:", "❌", "✅", "💡"]:
-        fixed_ex = fixed_ex.replace(marker, chr(10) + marker)
+    fixed_ex = fixed_ex.replace("📌", chr(10) + "📌")
+    fixed_ex = fixed_ex.replace("Example 1:", chr(10) + "Example 1:")
+    fixed_ex = fixed_ex.replace("Example 2:", chr(10) + "Example 2:")
+    fixed_ex = fixed_ex.replace("❌", chr(10) + "❌")
+    fixed_ex = fixed_ex.replace("✅", chr(10) + "✅")
+    fixed_ex = fixed_ex.replace("💡", chr(10) + "💡")
     while chr(10) + chr(10) + chr(10) in fixed_ex:
         fixed_ex = fixed_ex.replace(chr(10) + chr(10) + chr(10), chr(10) + chr(10))
     out = chr(10).join(clean_table).strip()
     if fixed_ex.strip():
         out += chr(10) + chr(10) + "✏️ How to Make It Better" + chr(10) + chr(10) + fixed_ex.strip()
     return out.strip()
+
 
 def get_ai_feedback(prompt: str) -> str:
     client = get_groq_client()
