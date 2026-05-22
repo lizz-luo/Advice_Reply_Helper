@@ -215,7 +215,7 @@ def get_ai_feedback(prompt: str) -> str:
     client = get_groq_client()
     completion = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
-        temperature=0.3,
+        temperature=0.1,
         messages=[
             {
                 "role": "system",
@@ -776,3 +776,11 @@ st.markdown(
     "<div class='footer-note'>© 2026 Becky Cheung. All Rights Reserved.</div>",
     unsafe_allow_html=True,
 )
+
+def render_feedback_table(rows):
+    lines=["| Focus Area | What You Did Well | Weakness | Tip |","|---|---|---|---|"]
+    for r in rows:
+        lines.append(f"| {r['focus']} | {r['well']} | {r['weak']} | {r['tip']} |")
+    return "\n".join(lines)
+
+
