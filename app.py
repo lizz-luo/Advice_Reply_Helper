@@ -166,7 +166,6 @@ def build_prompt(writing, student_name, mode, help_values, custom_q):
         "- What You Did Well: ONE specific, genuine example from the student's writing. Quote their words if possible. Keep it to 1 sentence.\n"
         "- Weakness: ONE honest, specific weakness in that area. Be direct but kind. 1 sentence only. If the student did well, write 'No major weakness — keep it up!'.\n"
         "- Tip: ONE short, clear, actionable tip to fix the weakness. Max 1-2 sentences. Simple words only.\n\n"
-        "--- END TABLE ---\n\n"
         "=== PART 2: HOW TO MAKE IT BETTER ===\n"
         "After the table, write a section with this exact heading: ✏️ How to Make It Better\n"
         "For EACH checklist goal reviewed, provide TWO concrete before-and-after examples.\n"
@@ -205,29 +204,9 @@ def get_groq_client():
         raise ValueError("GROQ_API_KEY is not set in Streamlit secrets.")
     return Groq(api_key=api_key)
 
-def post_process_feedback(text: str) -> str:
-    markers = ["❌", "✅", "💡", "📌", "Example 1:", "Example 2:"]
-    for m in markers:
-        text = text.replace(m, f"\n\n{m}")
-    text = re.sub(r'\n{3,}', '\n\n', text)
-    return text.strip()
 
-def get_ai_feedback(prompt: str) -> str:
-    client = get_groq_client()
-    completion = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        temperature=0.3,
-        messages=[
-            {
-                "role": "system",
-                "content": "You are a helpful encouraging writing coach for primary school students aged 10-11. Follow the user prompt exactly and return concise markdown. When writing examples with lines starting with negative, positive, and idea markers, always put each on its own separate line. Never merge them into one paragraph.",
-            },
-            {"role": "user", "content": prompt},
-        ],
-    )
-     
-    raw = completion.choices[0].message.content.strip()
-    return post_process_feedback(raw)
+def post_process_feedback(text: str) -> str:
+    return (text or "").strip()
 
 
 def format_feedback_output(text: str) -> str:
@@ -269,10 +248,6 @@ def format_feedback_output(text: str) -> str:
     return out.strip()
 
 
-def post_process_feedback(text: str) -> str:
-    return (text or "").strip()
-
-
 def get_ai_feedback(prompt: str) -> str:
     client = get_groq_client()
     completion = client.chat.completions.create(
@@ -298,7 +273,8 @@ def llm_detect_write_for_me(custom_q: str) -> bool:
         check_prompt = (
             "You are a safeguard for a primary school writing tool. "
             "Decide whether the student is asking the AI to write, complete, rewrite, or finish their work for them, rather than asking for feedback or tips. "
-            f'Student question: "{custom_q}"\n'
+            f'Student question: "{custom_q}"
+'
             "Reply with ONLY one word: YES or NO."
         )
         resp = client.chat.completions.create(
