@@ -229,6 +229,37 @@ def get_ai_feedback(prompt: str) -> str:
     return post_process_feedback(raw)
 
 
+def normalize_feedback_table(text: str) -> str:
+    lines = [ln.strip() for ln in (text or "").splitlines() if ln.strip()]
+    out = []
+    for ln in lines:
+        if ln.startswith("|"):
+            out.append(ln)
+    if len(out) >= 2:
+        return "
+".join(out)
+    return text.strip()
+
+
+def normalize_feedback_examples(text: str) -> str:
+    t = (text or "").strip()
+    for marker in ["📌", "Example 1:", "Example 2:"]:
+        t = t.replace(marker, f"
+
+{marker}")
+    t = re.sub(r"
+{3,}", "
+
+", t)
+    return t.strip()
+
+
+def render_feedback_markdown(table_text: str, example_text: str) -> str:
+    return "
+
+".join([table_text.strip(), "✏️ How to Make It Better", example_text.strip()]).strip()
+
+
 def llm_detect_write_for_me(custom_q: str) -> bool:
     if not custom_q.strip():
         return False
