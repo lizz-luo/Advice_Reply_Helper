@@ -211,29 +211,55 @@ def post_process_feedback(text: str) -> str:
 
 
 def format_feedback_output(text: str) -> str:
-    t = (text or "").replace(chr(13) + chr(10), chr(10)).strip()
+    t = (text or "").replace("
+", "
+").strip()
+
     if "--- END TABLE ---" not in t:
         return t
+
     table_part, rest = t.split("--- END TABLE ---", 1)
-    table_lines = [ln.strip() for ln in table_part.splitlines() if ln.strip().startswith("|")]
-    clean_table = [ln for ln in table_lines if ln.count("|") >= 3] or table_lines
+
+    table_lines = [
+        ln for ln in table_part.splitlines()
+        if ln.strip().startswith("|")
+    ]
+
+    clean_table = "
+".join(table_lines)
+
     ex = rest.strip()
+
     if "✏️ How to Make It Better" in ex:
-        ex = ex.split("✏️ How to Make It Better", 1)[1].strip()
-    ex_lines = [ln.strip() for ln in ex.splitlines() if ln.strip()]
-    fixed_ex = chr(10).join(ex_lines)
-    fixed_ex = fixed_ex.replace("📌", chr(10) + "📌")
-    fixed_ex = fixed_ex.replace("Example 1:", chr(10) + "Example 1:")
-    fixed_ex = fixed_ex.replace("Example 2:", chr(10) + "Example 2:")
-    fixed_ex = fixed_ex.replace("❌", chr(10) + "❌")
-    fixed_ex = fixed_ex.replace("✅", chr(10) + "✅")
-    fixed_ex = fixed_ex.replace("💡", chr(10) + "💡")
-    while chr(10) + chr(10) + chr(10) in fixed_ex:
-        fixed_ex = fixed_ex.replace(chr(10) + chr(10) + chr(10), chr(10) + chr(10))
-    out = chr(10).join(clean_table).strip()
-    if fixed_ex.strip():
-        out += chr(10) + chr(10) + "✏️ How to Make It Better" + chr(10) + chr(10) + fixed_ex.strip()
-    return out.strip()
+        ex = ex.split(
+            "✏️ How to Make It Better",
+            1
+        )[1].strip()
+
+    ex = ex.replace("📌","<br><br><h4>📌")
+    ex = ex.replace("Example 1:","</h4><br><br><b>Example 1:</b>")
+    ex = ex.replace("Example 2:","<br><br><b>Example 2:</b>")
+
+    ex = ex.replace("❌","<br>❌ ")
+    ex = ex.replace("✅","<br>✅ ")
+    ex = ex.replace("💡","<br>💡 ")
+
+    while "<br><br><br>" in ex:
+        ex = ex.replace("<br><br><br>","<br><br>")
+
+    output = clean_table
+
+    if ex.strip():
+        output += f"""
+
+---
+
+# ✏️ How to Make It Better
+
+{ex}
+"""
+
+    return output.strip()
 
 
 def get_ai_feedback(prompt: str) -> str:
@@ -724,7 +750,7 @@ if st.session_state.get("feedback_text"):
     count = st.session_state["interaction_count"]
     st.markdown(f"<span class='help-chip'>💬 {count} interaction{'s' if count != 1 else ''}</span>", unsafe_allow_html=True)
     st.markdown("<div class='feedback-box'>", unsafe_allow_html=True)
-    st.markdown(st.session_state["feedback_text"])
+    st.markdown(st.session_state["feedback_text"], unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
