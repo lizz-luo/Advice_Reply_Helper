@@ -166,6 +166,7 @@ def build_prompt(writing, student_name, mode, help_values, custom_q):
         "- What You Did Well: ONE specific, genuine example from the student's writing. Quote their words if possible. Keep it to 1 sentence.\n"
         "- Weakness: ONE honest, specific weakness in that area. Be direct but kind. 1 sentence only. If the student did well, write 'No major weakness — keep it up!'.\n"
         "- Tip: ONE short, clear, actionable tip to fix the weakness. Max 1-2 sentences. Simple words only.\n\n"
+        "--- END TABLE ---\n\n"
         "=== PART 2: HOW TO MAKE IT BETTER ===\n"
         "After the table, write a section with this exact heading: ✏️ How to Make It Better\n"
         "For EACH checklist goal reviewed, provide TWO concrete before-and-after examples.\n"
@@ -226,7 +227,58 @@ def get_ai_feedback(prompt: str) -> str:
     )
      
     raw = completion.choices[0].message.content.strip()
-    return post_process_feedback(raw)
+    return format_feedback_output(post_process_feedback(raw))
+
+
+def format_feedback_output(text: str) -> str:
+    t = (text or "").replace("
+", "
+").strip()
+    if "--- END TABLE ---" in t:
+        table_part, rest = t.split("--- END TABLE ---", 1)
+    elif "✏️ How to Make It Better" in t:
+        table_part, rest = t.split("✏️ How to Make It Better", 1)
+    else:
+        return t
+    table_lines = []
+    for ln in table_part.splitlines():
+        s = ln.strip()
+        if not s:
+            continue
+        if s.startswith("|"):
+            table_lines.append(s)
+    # keep only the table rows and header
+    clean_table = []
+    for ln in table_lines:
+        if ln.count("|") >= 3:
+            clean_table.append(ln)
+    if not clean_table:
+        clean_table = table_lines
+    ex = rest.strip()
+    if "✏️ How to Make It Better" in ex:
+        ex = ex.split("✏️ How to Make It Better", 1)[1].strip()
+    for marker in ["📌", "Example 1:", "Example 2:", "❌", "✅", "💡"]:
+        ex = ex.replace(marker, "
+" + marker)
+    while "
+
+
+" in ex:
+        ex = ex.replace("
+
+
+", "
+
+")
+    out = "
+".join(clean_table).strip()
+    if ex:
+        out += "
+
+✏️ How to Make It Better
+
+" + ex.strip()
+    return out.strip()
 
 
 def llm_detect_write_for_me(custom_q: str) -> bool:
