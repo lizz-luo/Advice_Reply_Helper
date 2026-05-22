@@ -801,6 +801,8 @@ if st.session_state.get("feedback_text"):
         unsafe_allow_html=True
     )
 
+feedback = st.session_state.get("feedback_text", "")
+
 if "✏️ How to Make It Better" in feedback:
 
     table, detail = feedback.split(
