@@ -166,6 +166,7 @@ def build_prompt(writing, student_name, mode, help_values, custom_q):
         "- What You Did Well: ONE specific, genuine example from the student's writing. Quote their words if possible. Keep it to 1 sentence.\n"
         "- Weakness: ONE honest, specific weakness in that area. Be direct but kind. 1 sentence only. If the student did well, write 'No major weakness — keep it up!'.\n"
         "- Tip: ONE short, clear, actionable tip to fix the weakness. Max 1-2 sentences. Simple words only.\n\n"
+        "--- END TABLE ---\n\n"
         "=== PART 2: HOW TO MAKE IT BETTER ===\n"
         "After the table, write a section with this exact heading: ✏️ How to Make It Better\n"
         "For EACH checklist goal reviewed, provide TWO concrete before-and-after examples.\n"
@@ -209,6 +210,27 @@ def post_process_feedback(text: str) -> str:
     return (text or "").strip()
 
 
+def format_feedback_output(text: str) -> str:
+    t = (text or "").replace(chr(13) + chr(10), chr(10)).strip()
+    if "--- END TABLE ---" not in t:
+        return t
+    table_part, rest = t.split("--- END TABLE ---", 1)
+    table_lines = [ln.strip() for ln in table_part.splitlines() if ln.strip().startswith("|")]
+    clean_table = [ln for ln in table_lines if ln.count("|") >= 3] or table_lines
+    ex = rest.strip()
+    if "✏️ How to Make It Better" in ex:
+        ex = ex.split("✏️ How to Make It Better", 1)[1].strip()
+    ex_lines = [ln.strip() for ln in ex.splitlines() if ln.strip()]
+    fixed_ex = chr(10).join(ex_lines)
+    for marker in ["📌", "Example 1:", "Example 2:", "❌", "✅", "💡"]:
+        fixed_ex = fixed_ex.replace(marker, chr(10) + marker)
+    while chr(10) + chr(10) + chr(10) in fixed_ex:
+        fixed_ex = fixed_ex.replace(chr(10) + chr(10) + chr(10), chr(10) + chr(10))
+    out = chr(10).join(clean_table).strip()
+    if fixed_ex.strip():
+        out += chr(10) + chr(10) + "✏️ How to Make It Better" + chr(10) + chr(10) + fixed_ex.strip()
+    return out.strip()
+
 def get_ai_feedback(prompt: str) -> str:
     client = get_groq_client()
     completion = client.chat.completions.create(
@@ -223,7 +245,7 @@ def get_ai_feedback(prompt: str) -> str:
         ],
     )
     raw = completion.choices[0].message.content.strip()
-    return post_process_feedback(raw)
+    return format_feedback_output(post_process_feedback(raw))
 
 
 def llm_detect_write_for_me(custom_q: str) -> bool:
