@@ -142,9 +142,12 @@ def build_prompt(writing, student_name, mode, help_values, custom_q):
         "=== STRICT RULES ===\n"
         "1. NEVER write, rewrite, finish, or complete the student's email — not even one sentence.\n"
         "2. ONLY give feedback on the selected checklist goals listed below.\n"
-        "3. Use very simple English suitable for P5 students (age 10-11), including weaker learners. No jargon.\n"
-        "4. Be honest and direct about weaknesses — do NOT give vague encouragement instead of real feedback.\n"
-        "5. Keep the total response under 400 words.\n\n"
+        "3. 3. Use very simple English for beginner English learners, especially weaker learners. Use short sentences and easy words only.\n"
+        "4. Match the feedback to what the student actually wrote.\n"
+        "5. If the student only shows understanding of the problem and does not try to give solutions yet, only comment on whether the problem is clear and understood. Do NOT criticise the student for not giving advice, solutions, or full development at this stage.\n"
+        "6. Do not judge missing parts unless the student tried to do that part. If a goal is not attempted, say what could be added later in a gentle way.\n"
+        "7. Be honest but kind. Avoid harsh words.\n"
+        "8. Keep the total response under 350 words.\n\n"
     )
 
     if goals_block:
@@ -408,21 +411,19 @@ hr, [data-testid="stDivider"] { border-color: var(--panel-border) !important; ba
 .footer-note { text-align:center; color: var(--muted); font-size:0.85rem; margin-top:2rem; padding-bottom:1rem; }
 
 .hero-title-row { display:flex; align-items:center; justify-content:center; gap:0.55rem; flex-wrap:wrap; }
-.floating-emoji { display:inline-block; font-size:1.9rem; line-height:1; animation: floaty 3.2s ease-in-out infinite; will-change: transform; transform-origin:center; }
+.floating-emoji { display:inline-block; font-size:1.9rem; line-height:1; animation: floaty 3.2s ease-in-out infinite; will-change: transform; }
 .floating-emoji.delay-1 { animation-delay: 0.4s; }
-.step-emoji { display:inline-block; margin-right:0.2rem; animation: floaty 3.2s ease-in-out infinite; will-change: transform; transform-origin:center; }
-.hero .floating-emoji,
-.panel h3 .step-emoji,
-.panel h3 .floating-emoji,
-.feedback-box .floating-emoji { animation: floaty 3.2s ease-in-out infinite; }
+.floating-emoji.delay-2 { animation-delay: 0.9s; }
 @keyframes floaty {
     0% { transform: translateY(0px) rotate(0deg); }
     50% { transform: translateY(-8px) rotate(-4deg); }
     100% { transform: translateY(0px) rotate(0deg); }
 }
 @media (prefers-reduced-motion: reduce) {
-    .floating-emoji, .step-emoji, .hero .floating-emoji, .panel h3 .step-emoji, .panel h3 .floating-emoji, .feedback-box .floating-emoji { animation: none !important; transform: none !important; }
+    .floating-emoji { animation: none !important; }
 }
+.step-emoji { display:inline-block; margin-right:0.2rem; }
+
 
 </style>
 """,
