@@ -218,27 +218,41 @@ def format_feedback_output(text: str) -> str:
 
     table_part, rest = t.split("--- END TABLE ---", 1)
 
+    # 保留表格
     table_lines = [
         ln for ln in table_part.splitlines()
         if ln.strip().startswith("|")
     ]
+
     clean_table = "\n".join(table_lines)
 
     ex = rest.strip()
 
+    # 去掉重複標題
     if "✏️ How to Make It Better" in ex:
-        ex = ex.split("✏️ How to Make It Better", 1)[1].strip()
+        ex = ex.split(
+            "✏️ How to Make It Better",
+            1
+        )[1].strip()
 
-    ex = ex.replace("📌", "<br><br><h4>📌")
-    ex = ex.replace("Example 1:", "</h4><br><br><b>Example 1:</b>")
-    ex = ex.replace("Example 2:", "<br><br><b>Example 2:</b>")
+    # 強制拆開元素
+    ex = ex.replace("📌", "\n\n📌 ")
+    ex = ex.replace("Example 1:", "\n\nExample 1:")
+    ex = ex.replace("Example 2:", "\n\nExample 2:")
 
-    ex = ex.replace("❌", "<br>❌ ")
-    ex = ex.replace("✅", "<br>✅ ")
-    ex = ex.replace("💡", "<br>💡 ")
+    ex = ex.replace("❌", "\n❌ ")
+    ex = ex.replace("✅", "\n✅ ")
+    ex = ex.replace("💡", "\n💡 ")
 
-    while "<br><br><br>" in ex:
-        ex = ex.replace("<br><br><br>", "<br><br>")
+    # 避免空行過多
+    while "\n\n\n" in ex:
+        ex = ex.replace(
+            "\n\n\n",
+            "\n\n"
+        )
+
+    # 最後才轉HTML換行
+    ex = ex.replace("\n", "<br>")
 
     output = clean_table
 
