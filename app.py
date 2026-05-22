@@ -750,11 +750,56 @@ if st.session_state.get("show_save_log_dialog", False):
 # ── Feedback ─────────────────────────────────────────────────────────────────
 if st.session_state.get("feedback_text"):
     st.markdown("<div class='panel'>", unsafe_allow_html=True)
-    st.markdown("<h3><span class='floating-emoji step-emoji'>✨</span>Your Feedback</h3>", unsafe_allow_html=True)
+
+    st.markdown(
+        "<h3><span class='floating-emoji step-emoji'>✨</span>Your Feedback</h3>",
+        unsafe_allow_html=True
+    )
+
     count = st.session_state["interaction_count"]
-    st.markdown(f"<span class='help-chip'>💬 {count} interaction{'s' if count != 1 else ''}</span>", unsafe_allow_html=True)
-    st.markdown("<div class='feedback-box'>", unsafe_allow_html=True)
+
+    st.markdown(
+        f"<span class='help-chip'>💬 {count} interaction{'s' if count != 1 else ''}</span>",
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        "<div class='feedback-box'>",
+        unsafe_allow_html=True
+    )
+
     feedback = st.session_state["feedback_text"]
+
+    if "✏️ How to Make It Better" in feedback:
+
+        table, detail = feedback.split(
+            "✏️ How to Make It Better",
+            1
+        )
+
+        st.markdown(table)
+
+        st.markdown(
+            "## ✏️ How to Make It Better"
+        )
+
+        st.code(
+            detail.strip(),
+            language=None
+        )
+
+    else:
+        st.markdown(feedback)
+
+    st.markdown(
+        "</div>",
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        "</div>",
+        unsafe_allow_html=True
+    )
 
 if "✏️ How to Make It Better" in feedback:
 
@@ -843,7 +888,28 @@ with st.expander("🧾 Session History", expanded=st.session_state.get("session_
                 key=f"history_writing_{idx}",
             )
             st.markdown("**Feedback**")
-            resp=item["response"]
+
+            resp = item["response"]
+
+            if "✏️ How to Make It Better" in resp:
+                t, d = resp.split(
+                    "✏️ How to Make It Better",
+                    1
+                )
+
+                st.markdown(t)
+
+                st.markdown(
+                    "## ✏️ How to Make It Better"
+                )
+
+                st.code(
+                    d.strip(),
+                    language=None
+                )
+
+            else:
+                st.markdown(resp)
 
 if "✏️ How to Make It Better" in resp:
 
