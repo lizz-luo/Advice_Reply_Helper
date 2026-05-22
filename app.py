@@ -142,9 +142,12 @@ def build_prompt(writing, student_name, mode, help_values, custom_q):
         "=== STRICT RULES ===\n"
         "1. NEVER write, rewrite, finish, or complete the student's email — not even one sentence.\n"
         "2. ONLY give feedback on the selected checklist goals listed below.\n"
-        "3. Use very simple English suitable for P5 students (age 10-11), including weaker learners. No jargon.\n"
-        "4. Be honest and direct about weaknesses — do NOT give vague encouragement instead of real feedback.\n"
-        "5. Keep the total response under 400 words.\n\n"
+        "3. 3. Use very simple English for beginner English learners, especially weaker learners. Use short sentences and easy words only.\n"
+        "4. Match the feedback to what the student actually wrote.\n"
+        "5. If the student only shows understanding of the problem and does not try to give solutions yet, only comment on whether the problem is clear and understood. Do NOT criticise the student for not giving advice, solutions, or full development at this stage.\n"
+        "6. Do not judge missing parts unless the student tried to do that part. If a goal is not attempted, say what could be added later in a gentle way.\n"
+        "7. Be honest but kind. Avoid harsh words.\n"
+        "8. Keep the total response under 350 words.\n\n"
     )
 
     if goals_block:
