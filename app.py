@@ -226,27 +226,7 @@ def get_ai_feedback(prompt: str) -> str:
     )
      
     raw = completion.choices[0].message.content.strip()
-    return format_feedback_output(post_process_feedback(raw))
-
-
-def format_feedback_output(text: str) -> str:
-    t = (text or "").replace("
-", "
-").strip()
-    for marker in ["| Focus Area |", "|---|---|---|---|", "✏️ How to Make It Better", "📌", "Example 1:", "Example 2:", "❌", "✅", "💡"]:
-        t = t.replace(marker, "
-" + marker)
-    while "
-
-
-" in t:
-        t = t.replace("
-
-
-", "
-
-")
-    return t.strip()
+    return post_process_feedback(raw)
 
 
 def llm_detect_write_for_me(custom_q: str) -> bool:
@@ -270,7 +250,6 @@ def llm_detect_write_for_me(custom_q: str) -> bool:
         return answer.startswith("YES")
     except Exception:
         return False
-
 
 def escape_html(s: str) -> str:
     return html.escape(s or "")
