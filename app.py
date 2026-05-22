@@ -204,52 +204,9 @@ def get_groq_client():
         raise ValueError("GROQ_API_KEY is not set in Streamlit secrets.")
     return Groq(api_key=api_key)
 
+
 def post_process_feedback(text: str) -> str:
-    markers = ["❌", "✅", "💡", "📌", "Example 1:", "Example 2:"]
-    for m in markers:
-        text = text.replace(m, f"\n\n{m}")
-    text = re.sub(r'\n{3,}', '\n\n', text)
-    return text.strip()
-
-def get_ai_feedback(prompt: str) -> str:
-    client = get_groq_client()
-    completion = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        temperature=0.3,
-        messages=[
-            {
-                "role": "system",
-                "content": "You are a helpful encouraging writing coach for primary school students aged 10-11. Follow the user prompt exactly and return concise markdown. When writing examples with lines starting with negative, positive, and idea markers, always put each on its own separate line. Never merge them into one paragraph.",
-            },
-            {"role": "user", "content": prompt},
-        ],
-    )
-     
-    raw = completion.choices[0].message.content.strip()
-    return format_feedback_output(post_process_feedback(raw))
-
-
-def llm_detect_write_for_me(custom_q: str) -> bool:
-    if not custom_q.strip():
-        return False
-    try:
-        client = get_groq_client()
-        check_prompt = (
-            "You are a safeguard for a primary school writing tool. "
-            "Decide whether the student is asking the AI to write, complete, rewrite, or finish their work for them, rather than asking for feedback or tips. "
-            f'Student question: "{custom_q}"\n'
-            "Reply with ONLY one word: YES or NO."
-        )
-        resp = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            temperature=0,
-            max_tokens=5,
-            messages=[{"role": "user", "content": check_prompt}],
-        )
-        answer = resp.choices[0].message.content.strip().upper()
-        return answer.startswith("YES")
-    except Exception:
-        return False
+    return (text or "").strip()
 
 
 def format_feedback_output(text: str) -> str:
@@ -262,6 +219,7 @@ def format_feedback_output(text: str) -> str:
         table_part, rest = t.split("✏️ How to Make It Better", 1)
     else:
         return t
+
     table_lines = []
     for ln in table_part.splitlines():
         s = ln.strip()
@@ -270,6 +228,7 @@ def format_feedback_output(text: str) -> str:
     clean_table = [ln for ln in table_lines if ln.count("|") >= 3]
     if not clean_table:
         clean_table = table_lines
+
     ex = rest.strip()
     if "✏️ How to Make It Better" in ex:
         ex = ex.split("✏️ How to Make It Better", 1)[1].strip()
@@ -286,6 +245,7 @@ def format_feedback_output(text: str) -> str:
 ", "
 
 ")
+
     out = "
 ".join(clean_table).strip()
     if ex:
@@ -295,6 +255,23 @@ def format_feedback_output(text: str) -> str:
 
 " + ex.strip()
     return out.strip()
+
+
+def get_ai_feedback(prompt: str) -> str:
+    client = get_groq_client()
+    completion = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        temperature=0.1,
+        messages=[
+            {
+                "role": "system",
+                "content": "You are a helpful encouraging writing coach for primary school students aged 10-11. Follow the user prompt exactly and return concise markdown.",
+            },
+            {"role": "user", "content": prompt},
+        ],
+    )
+    raw = completion.choices[0].message.content.strip()
+    return format_feedback_output(post_process_feedback(raw))
 
 
 def llm_detect_write_for_me(custom_q: str) -> bool:
@@ -319,9 +296,6 @@ def llm_detect_write_for_me(custom_q: str) -> bool:
         return answer.startswith("YES")
     except Exception:
         return False
-
-def escape_html(s: str) -> str:
-    return html.escape(s or "")
 
 
 def do_reset_after_step2():
