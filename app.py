@@ -166,6 +166,7 @@ def build_prompt(writing, student_name, mode, help_values, custom_q):
         "- What You Did Well: ONE specific, genuine example from the student's writing. Quote their words if possible. Keep it to 1 sentence.\n"
         "- Weakness: ONE honest, specific weakness in that area. Be direct but kind. 1 sentence only. If the student did well, write 'No major weakness — keep it up!'.\n"
         "- Tip: ONE short, clear, actionable tip to fix the weakness. Max 1-2 sentences. Simple words only.\n\n"
+        "--- END TABLE ---\n\n"
         "=== PART 2: HOW TO MAKE IT BETTER ===\n"
         "After the table, write a section with this exact heading: ✏️ How to Make It Better\n"
         "For EACH checklist goal reviewed, provide TWO concrete before-and-after examples.\n"
@@ -205,43 +206,17 @@ def get_groq_client():
     return Groq(api_key=api_key)
 
 def post_process_feedback(text: str) -> str:
-    return (text or "").strip()
-
-
-def format_feedback_output(text: str) -> str:
-    t = (text or "").replace("\r\n", "\n").strip()
-    if "--- END TABLE ---" in t:
-        table_part, rest = t.split("--- END TABLE ---", 1)
-    elif "✏️ How to Make It Better" in t:
-        table_part, rest = t.split("✏️ How to Make It Better", 1)
-    else:
-        return t
-    table_lines = []
-    for ln in table_part.splitlines():
-        s = ln.strip()
-        if s.startswith("|"):
-            table_lines.append(s)
-    clean_table = [ln for ln in table_lines if ln.count("|") >= 3]
-    if not clean_table:
-        clean_table = table_lines
-    ex = rest.strip()
-    if "✏️ How to Make It Better" in ex:
-        ex = ex.split("✏️ How to Make It Better", 1)[1].strip()
-    for marker in ["📌", "Example 1:", "Example 2:", "❌", "✅", "💡"]:
-        ex = ex.replace(marker, "\n" + marker)
-    while "\n\n\n" in ex:
-        ex = ex.replace("\n\n\n", "\n\n")
-    out = "\n".join(clean_table).strip()
-    if ex:
-        out += "\n\n✏️ How to Make It Better\n\n" + ex.strip()
-    return out.strip()
-
+    markers = ["❌", "✅", "💡", "📌", "Example 1:", "Example 2:"]
+    for m in markers:
+        text = text.replace(m, f"\n\n{m}")
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    return text.strip()
 
 def get_ai_feedback(prompt: str) -> str:
     client = get_groq_client()
     completion = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
-        temperature=0.1,
+        temperature=0.3,
         messages=[
             {
                 "role": "system",
@@ -253,6 +228,66 @@ def get_ai_feedback(prompt: str) -> str:
      
     raw = completion.choices[0].message.content.strip()
     return post_process_feedback(raw)
+
+
+def format_feedback_output(text: str) -> str:
+    t = (text or "").replace("
+", "
+").strip()
+    if "--- END TABLE ---" in t:
+        table_part, rest = t.split("--- END TABLE ---", 1)
+    elif "✏️ How to Make It Better" in t:
+        table_part, rest = t.split("✏️ How to Make It Better", 1)
+    else:
+        return t
+    table_lines = [ln.strip() for ln in table_part.splitlines() if ln.strip().startswith("|")]
+    clean_table = [ln for ln in table_lines if ln.count("|") >= 3] or table_lines
+    ex = rest.strip()
+    if "✏️ How to Make It Better" in ex:
+        ex = ex.split("✏️ How to Make It Better", 1)[1].strip()
+    for marker in ["📌", "Example 1:", "Example 2:", "❌", "✅", "💡"]:
+        ex = ex.replace(marker, "
+" + marker)
+    while "
+
+
+" in ex:
+        ex = ex.replace("
+
+
+", "
+
+")
+    out = "
+".join(clean_table).strip()
+    if ex:
+        out += "
+
+✏️ How to Make It Better
+
+" + ex.strip()
+    return out.strip()
+
+
+def post_process_feedback(text: str) -> str:
+    return (text or "").strip()
+
+
+def get_ai_feedback(prompt: str) -> str:
+    client = get_groq_client()
+    completion = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        temperature=0.1,
+        messages=[
+            {
+                "role": "system",
+                "content": "You are a helpful encouraging writing coach for primary school students aged 10-11. Follow the user prompt exactly and return concise markdown.",
+            },
+            {"role": "user", "content": prompt},
+        ],
+    )
+    raw = completion.choices[0].message.content.strip()
+    return format_feedback_output(post_process_feedback(raw))
 
 
 def llm_detect_write_for_me(custom_q: str) -> bool:
