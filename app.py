@@ -209,45 +209,6 @@ def post_process_feedback(text: str) -> str:
     return (text or "").strip()
 
 
-def format_feedback_output(text: str) -> str:
-    t = (text or "").replace("
-", "
-").strip()
-    if "--- END TABLE ---" in t:
-        table_part, rest = t.split("--- END TABLE ---", 1)
-    elif "✏️ How to Make It Better" in t:
-        table_part, rest = t.split("✏️ How to Make It Better", 1)
-    else:
-        return t
-    table_lines = [ln.strip() for ln in table_part.splitlines() if ln.strip().startswith("|")]
-    clean_table = [ln for ln in table_lines if ln.count("|") >= 3] or table_lines
-    ex = rest.strip()
-    if "✏️ How to Make It Better" in ex:
-        ex = ex.split("✏️ How to Make It Better", 1)[1].strip()
-    for marker in ["📌", "Example 1:", "Example 2:", "❌", "✅", "💡"]:
-        ex = ex.replace(marker, "
-" + marker)
-    while "
-
-
-" in ex:
-        ex = ex.replace("
-
-
-", "
-
-")
-    out = "
-".join(clean_table).strip()
-    if ex:
-        out += "
-
-✏️ How to Make It Better
-
-" + ex.strip()
-    return out.strip()
-
-
 def get_ai_feedback(prompt: str) -> str:
     client = get_groq_client()
     completion = client.chat.completions.create(
@@ -262,7 +223,7 @@ def get_ai_feedback(prompt: str) -> str:
         ],
     )
     raw = completion.choices[0].message.content.strip()
-    return format_feedback_output(post_process_feedback(raw))
+    return post_process_feedback(raw)
 
 
 def llm_detect_write_for_me(custom_q: str) -> bool:
@@ -273,8 +234,7 @@ def llm_detect_write_for_me(custom_q: str) -> bool:
         check_prompt = (
             "You are a safeguard for a primary school writing tool. "
             "Decide whether the student is asking the AI to write, complete, rewrite, or finish their work for them, rather than asking for feedback or tips. "
-            f'Student question: "{custom_q}"
-'
+            f'Student question: "{custom_q}"\n'
             "Reply with ONLY one word: YES or NO."
         )
         resp = client.chat.completions.create(
