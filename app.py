@@ -410,7 +410,7 @@ hr, [data-testid="stDivider"] { border-color: var(--panel-border) !important; ba
 .hero-title-row { display:flex; align-items:center; justify-content:center; gap:0.55rem; flex-wrap:wrap; }
 .floating-emoji { display:inline-block; font-size:1.9rem; line-height:1; animation: floaty 3.2s ease-in-out infinite; will-change: transform; }
 .floating-emoji.delay-1 { animation-delay: 0.4s; }
-.floating-emoji.delay-2 { animation-delay: 0.9s; }
+.step-emoji { display:inline-block; margin-right:0.2rem; }
 @keyframes floaty {
     0% { transform: translateY(0px) rotate(0deg); }
     50% { transform: translateY(-8px) rotate(-4deg); }
@@ -419,8 +419,6 @@ hr, [data-testid="stDivider"] { border-color: var(--panel-border) !important; ba
 @media (prefers-reduced-motion: reduce) {
     .floating-emoji { animation: none !important; }
 }
-.step-emoji { display:inline-block; margin-right:0.2rem; }
-
 
 </style>
 """,
