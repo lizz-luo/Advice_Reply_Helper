@@ -229,8 +229,6 @@ def get_ai_feedback(prompt: str) -> str:
     return format_feedback_output(post_process_feedback(raw))
 
 
-
-
 def format_feedback_output(text: str) -> str:
     t = (text or "").replace("
 ", "
@@ -249,6 +247,7 @@ def format_feedback_output(text: str) -> str:
 
 ")
     return t.strip()
+
 
 def llm_detect_write_for_me(custom_q: str) -> bool:
     if not custom_q.strip():
