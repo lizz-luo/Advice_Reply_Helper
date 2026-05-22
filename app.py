@@ -220,7 +220,7 @@ def format_feedback_output(text: str) -> str:
 
     table_part, rest = t.split("--- END TABLE ---", 1)
 
-    # 保留表格
+    # 表格保留
     table_lines = [
         line for line in table_part.splitlines()
         if line.strip().startswith("|")
@@ -234,37 +234,24 @@ def format_feedback_output(text: str) -> str:
         ex = ex.split(
             "✏️ How to Make It Better",
             1
-        )[1]
+        )[1].strip()
 
-    # ===== 關鍵修正 =====
-
-    markers = [
-        "📌",
-        "Example 1:",
-        "Example 2:",
-        "❌",
-        "✅",
-        "💡"
-    ]
-
-    for m in markers:
-        ex = ex.replace(
-            m,
-            f"\n\n{m}"
-        )
-
-    # 清掉過多空行
+    # 關鍵：在所有 marker 前面插入換行
     ex = re.sub(
-        r"\n{3,}",
-        "\n\n",
+        r'(📌|Example\s+\d+:|❌|✅|💡)',
+        r'\n\n\1',
         ex
     )
 
-    # HTML強制換行
-    ex = ex.replace(
-        "\n",
-        "<br>"
+    # 清掉多餘空白
+    ex = re.sub(
+        r'\n{3,}',
+        '\n\n',
+        ex
     )
+
+    # HTML 強制換行
+    ex = ex.replace("\n", "<br>")
 
     output = clean_table
 
