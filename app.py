@@ -754,7 +754,28 @@ if st.session_state.get("feedback_text"):
     count = st.session_state["interaction_count"]
     st.markdown(f"<span class='help-chip'>💬 {count} interaction{'s' if count != 1 else ''}</span>", unsafe_allow_html=True)
     st.markdown("<div class='feedback-box'>", unsafe_allow_html=True)
-    st.markdown(st.session_state["feedback_text"], unsafe_allow_html=True)
+    feedback = st.session_state["feedback_text"]
+
+if "✏️ How to Make It Better" in feedback:
+
+    table, detail = feedback.split(
+        "✏️ How to Make It Better",
+        1
+    )
+
+    # 第一部分照舊 markdown 表格
+    st.markdown(table)
+
+    # 第二部分強制保留原格式
+    st.markdown("## ✏️ How to Make It Better")
+
+    st.code(
+        detail.strip(),
+        language=None
+    )
+
+else:
+    st.markdown(feedback)
     st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -822,7 +843,28 @@ with st.expander("🧾 Session History", expanded=st.session_state.get("session_
                 key=f"history_writing_{idx}",
             )
             st.markdown("**Feedback**")
-            st.markdown(item["response"])
+            resp=item["response"]
+
+if "✏️ How to Make It Better" in resp:
+
+    t,d=resp.split(
+        "✏️ How to Make It Better",
+        1
+    )
+
+    st.markdown(t)
+
+    st.markdown(
+        "## ✏️ How to Make It Better"
+    )
+
+    st.code(
+        d.strip(),
+        language=None
+    )
+
+else:
+    st.markdown(resp)
             st.markdown("</div>", unsafe_allow_html=True)
 
 # ── Footer ────────────────────────────────────────────────────────────────────
