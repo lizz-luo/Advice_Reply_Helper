@@ -211,9 +211,7 @@ def post_process_feedback(text: str) -> str:
 
 
 def format_feedback_output(text: str) -> str:
-    t = (text or "").replace("
-", "
-").strip()
+    t = (text or "").replace("\r\n", "\n").strip()
 
     if "--- END TABLE ---" not in t:
         return t
@@ -224,28 +222,23 @@ def format_feedback_output(text: str) -> str:
         ln for ln in table_part.splitlines()
         if ln.strip().startswith("|")
     ]
-
-    clean_table = "
-".join(table_lines)
+    clean_table = "\n".join(table_lines)
 
     ex = rest.strip()
 
     if "✏️ How to Make It Better" in ex:
-        ex = ex.split(
-            "✏️ How to Make It Better",
-            1
-        )[1].strip()
+        ex = ex.split("✏️ How to Make It Better", 1)[1].strip()
 
-    ex = ex.replace("📌","<br><br><h4>📌")
-    ex = ex.replace("Example 1:","</h4><br><br><b>Example 1:</b>")
-    ex = ex.replace("Example 2:","<br><br><b>Example 2:</b>")
+    ex = ex.replace("📌", "<br><br><h4>📌")
+    ex = ex.replace("Example 1:", "</h4><br><br><b>Example 1:</b>")
+    ex = ex.replace("Example 2:", "<br><br><b>Example 2:</b>")
 
-    ex = ex.replace("❌","<br>❌ ")
-    ex = ex.replace("✅","<br>✅ ")
-    ex = ex.replace("💡","<br>💡 ")
+    ex = ex.replace("❌", "<br>❌ ")
+    ex = ex.replace("✅", "<br>✅ ")
+    ex = ex.replace("💡", "<br>💡 ")
 
     while "<br><br><br>" in ex:
-        ex = ex.replace("<br><br><br>","<br><br>")
+        ex = ex.replace("<br><br><br>", "<br><br>")
 
     output = clean_table
 
@@ -260,7 +253,6 @@ def format_feedback_output(text: str) -> str:
 """
 
     return output.strip()
-
 
 def get_ai_feedback(prompt: str) -> str:
     client = get_groq_client()
