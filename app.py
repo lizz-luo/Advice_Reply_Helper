@@ -931,7 +931,7 @@ if "✏️ How to Make It Better" in resp:
 
 else:
     st.markdown(resp)
-            st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown(
