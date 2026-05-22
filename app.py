@@ -229,6 +229,13 @@ def get_ai_feedback(prompt: str) -> str:
     return post_process_feedback(raw)
 
 
+
+
+def render_feedback_markdown(table_text: str, example_text: str) -> str:
+    parts = [table_text.strip(), "", "✏️ How to Make It Better", "", example_text.strip()]
+    return "
+".join(parts).strip()
+
 def llm_detect_write_for_me(custom_q: str) -> bool:
     if not custom_q.strip():
         return False
@@ -657,130 +664,13 @@ if submit:
         goal_labels = [goal_label_map.get(v, v) for v in hvs]
         try:
             with st.spinner("Reviewing your email..."):
-                feedback = get_ai_feedback(prompt)
-            st.session_state["feedback_text"] = feedback
-            st.session_state["interaction_count"] += 1
-            st.session_state["interaction_history"].append(
-                {
-                    "timestamp":    hk_now_str(),
-                    "mode":         md,
-                    "mode_label":   MODE_DESC_MAP[md],
-                    "help_goals":   goal_labels,
-                    "custom_question": custom_q,
-                    "writing":      writing,
-                    "response":     feedback,
-                }
-            )
-            st.session_state["show_save_log_dialog"] = True
-            st.rerun()
-        except Exception as e:
-            st.error(f"Groq API error: {e}")
+                table_prompt = prompt + "
 
-if st.session_state.get("show_save_log_dialog", False):
-    @st.dialog("Save Learning Log?")
-    def save_log_dialog():
-        st.write("Would you like to save your learning log now?")
-        yes_col, later_col = st.columns(2)
-        with yes_col:
-            if st.button("Yes", use_container_width=True, key="save_log_yes"):
-                st.session_state["save_log_requested"] = True
-                st.session_state["trigger_auto_download"] = True
-                st.session_state["show_save_log_dialog"] = False
-                st.rerun()
-        with later_col:
-            if st.button("Later", use_container_width=True, key="save_log_later"):
-                st.session_state["show_save_log_dialog"] = False
-                st.rerun()
-    save_log_dialog()
+IMPORTANT: Output ONLY Part 1 feedback table. Do not include Part 2."
+                example_prompt = prompt + "
 
-# ── Feedback ─────────────────────────────────────────────────────────────────
-if st.session_state.get("feedback_text"):
-    st.markdown("<div class='panel'>", unsafe_allow_html=True)
-    st.markdown("<h3><span class='floating-emoji step-emoji'>✨</span>Your Feedback</h3>", unsafe_allow_html=True)
-    count = st.session_state["interaction_count"]
-    st.markdown(f"<span class='help-chip'>💬 {count} interaction{'s' if count != 1 else ''}</span>", unsafe_allow_html=True)
-    st.markdown("<div class='feedback-box'>", unsafe_allow_html=True)
-    st.markdown(st.session_state["feedback_text"])
-    st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# ── What's Next ───────────────────────────────────────────────────────────────
-if st.session_state.get("interaction_history"):
-    st.markdown("<div class='panel'>", unsafe_allow_html=True)
-    st.subheader("🚀 What Now?")
-    nx1, nx2 = st.columns(2)
-    with nx1:
-        if st.button("🎯 Try Other Goals", use_container_width=True,
-                     help="Keep the same email — choose different goals"):
-            st.session_state["reset_from_step3_on_next_run"] = True
-            st.session_state["session_history_expanded"] = False
-            st.session_state["scroll_to_step"] = "step3-anchor"
-            st.rerun()
-    with nx2:
-        if st.button("✏️ Check a New Part of My Email", use_container_width=True,
-                     help="Go back to Step 2, clear the email box, and reset later steps"):
-            st.session_state["clear_writing_on_next_run"] = True
-            st.session_state["reset_after_step2_on_next_run"] = True
-            st.session_state["session_history_expanded"] = False
-            st.session_state["scroll_to_step"] = "step2-anchor"
-            st.rerun()
-
-    if st.session_state.get("save_log_requested", False):
-        st.info("Your learning log is ready. Please click Save Learning Log below.")
-        st.session_state["save_log_requested"] = False
-    st.download_button(
-        "💾 Save Learning Log",
-        data=download_log_html(),
-        file_name=f"Learning_Log_{(st.session_state.get('student_name') or 'Student').replace(' ', '_')}.html",
-        mime="text/html",
-        use_container_width=True,
-    )
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# ── Session History ───────────────────────────────────────────────────────────
-with st.expander("🧾 Session History", expanded=st.session_state.get("session_history_expanded", False)):
-    history = st.session_state.get("interaction_history", [])
-    if not history:
-        st.write("No feedback sessions yet.")
-    else:
-        for i, item in enumerate(reversed(history), 1):
-            idx = len(history) - i + 1
-            st.markdown("<div class='history-card'>", unsafe_allow_html=True)
-            st.markdown(f"**Session {idx}**")
-            st.markdown(
-                f"<span class='history-meta'>🕒 {item['timestamp']}</span>"
-                f"<span class='history-meta'>🎯 {item['mode_label']}</span>",
-                unsafe_allow_html=True,
-            )
-            goals = item.get("help_goals", [])
-            if goals:
-                for g in goals:
-                    st.markdown(f"<span class='history-meta'>📋 {g}</span>", unsafe_allow_html=True)
-            if item.get("custom_question"):
-                st.markdown(f"**Custom question:** {item['custom_question']}")
-            st.markdown("**Writing sample**")
-            st.text_area(
-                label=f"Writing sample {idx}",
-                value=item["writing"],
-                height=180,
-                disabled=True,
-                label_visibility="collapsed",
-                key=f"history_writing_{idx}",
-            )
-            st.markdown("**Feedback**")
-            st.markdown(item["response"])
-            st.markdown("</div>", unsafe_allow_html=True)
-
-# ── Footer ────────────────────────────────────────────────────────────────────
-st.markdown(
-    "<div class='footer-note'>© 2026 Becky Cheung. All Rights Reserved.</div>",
-    unsafe_allow_html=True,
-)
-
-def render_feedback_table(rows):
-    lines=["| Focus Area | What You Did Well | Weakness | Tip |","|---|---|---|---|"]
-    for r in rows:
-        lines.append(f"| {r['focus']} | {r['well']} | {r['weak']} | {r['tip']} |")
-    return "\n".join(lines)
-
+IMPORTANT: Output ONLY Part 2 examples. Do not include Part 1 table."
+                feedback_table = get_ai_feedback_table(table_prompt)
+                feedback_examples = get_ai_feedback_examples(example_prompt)
+                feedback = render_feedback_markdown(feedback_table, feedback_examples)
 
