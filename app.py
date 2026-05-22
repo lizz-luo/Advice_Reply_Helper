@@ -891,9 +891,10 @@ with st.expander("🧾 Session History", expanded=st.session_state.get("session_
             )
             st.markdown("**Feedback**")
 
-            resp = item["response"]
+            resp = item.get("response", "")
 
             if "✏️ How to Make It Better" in resp:
+
                 t, d = resp.split(
                     "✏️ How to Make It Better",
                     1
