@@ -12,17 +12,17 @@ HKT = ZoneInfo("Asia/Hong_Kong")
 # hint shown under each checklist goal in Step 4
 HELP_HINTS = {
     "address_problem":        "talk about the reader's problem",
-    "two_advice":             "give 2 or more ideas to help",
-    "explain_advice":         "say WHY each idea will help",
-    "caring_tone":            "sound kind and encouraging",
+    "two_advice":             "give 2 or more helpful ideas",
+    "explain_advice":         "say how each idea can help",
+    "caring_tone":            "sound kind and friendly",
     "modal_verbs":            "use: should / could / might / would",
-    "conditional_sentences":  "use: If you…, you could…",
-    "empathy_phrases":        "use: I understand how you feel…",
-    "linking_words":          "use: firstly / moreover / in addition",
+    "conditional_sentences":  "use: If you..., you could...",
+    "empathy_phrases":        "use: I understand how you feel...",
+    "linking_words":          "use: first / also / in addition",
     "spelling_punctuation":   "check all spelling and full stops",
-    "strong_words": "use strong, expressive words instead of basic ones",
-    "greeting_signoff":       "start with Dear… end with Best wishes…",
-    "acknowledge_problem":    "show you understand their problem first",
+    "strong_words": "use clearer and more interesting words",
+    "greeting_signoff":       "start with Dear... end with Best wishes...",
+    "acknowledge_problem":    "show you understand the problem first",
     "separate_paragraphs":    "one idea per paragraph",
     "encouraging_closing":    "end with something hopeful",
 }
@@ -30,9 +30,9 @@ HELP_HINTS = {
 HELP_OPTIONS = {
     "content": [
         {"value": "address_problem",  "label": "🎯 Address the problem   (= talk about the reader's problem)"},
-        {"value": "two_advice",       "label": "💡 Two or more tips   (= give at least 2 pieces of advice)"},
-        {"value": "explain_advice",   "label": "🔍 Explain your advice   (= say how each tip can help)"},
-        {"value": "caring_tone",      "label": "❤️ Caring tone   (= kind, warm, friendly words)"},
+        {"value": "two_advice",       "label": "💡 Two or more ideas   (= give at least 2 helpful ideas)"},
+        {"value": "explain_advice",   "label": "🔍 Explain your ideas   (= say how each idea can help)"},
+        {"value": "caring_tone",      "label": "❤️ Caring tone   (= kind and friendly words)"},
     ],
     "language": [
         {"value": "modal_verbs",           "label": "💪 Modal verbs   (e.g. should, could, might)"},
@@ -138,13 +138,16 @@ def build_prompt(writing, student_name, mode, help_values, custom_q):
     prompt = (
         f"You are a friendly Advice Reply Helper for primary school students aged 10-11. "
         f"Student name: {student_name}. Feedback category: {category_name}.\n"
-        "The student has written an ADVICE REPLY EMAIL — a friendly email responding to someone who asked for help with a problem.\n\n"
+        "The student has written an ADVICE REPLY EMAIL — a friendly email replying to someone with a problem.\n\n"
         "=== STRICT RULES ===\n"
         "1. NEVER write, rewrite, finish, or complete the student's email — not even one sentence.\n"
         "2. ONLY give feedback on the selected checklist goals listed below.\n"
-        "3. Use very simple English suitable for P5 students (age 10-11), including weaker learners. No jargon.\n"
-        "4. Be honest and direct about weaknesses — do NOT give vague encouragement instead of real feedback.\n"
-        "5. Keep the total response under 400 words.\n\n"
+        "3. Use very simple English for P5 students, especially weaker learners. Use short sentences and easy words only.\n"
+        "4. Match the feedback to what the student actually wrote.\n"
+        "5. If the student only shows understanding of the problem and does not try to give solutions yet, only comment on whether the problem is clear and understood. Do NOT criticise the student for not giving advice, solutions, or full development at this stage.\n"
+        "6. Do not judge missing parts unless the student tried to do that part. If a goal is not attempted, say what could be added later in a gentle way.\n"
+        "7. Be honest but kind. Avoid harsh words.\n"
+        "8. Keep the total response under 400 words.\n\n"
     )
 
     if goals_block:
@@ -161,8 +164,8 @@ def build_prompt(writing, student_name, mode, help_values, custom_q):
         "- One row per checklist goal selected above.\n"
         "- Focus Area: the short name of the goal (e.g. 'Caring tone', 'Modal verbs').\n"
         "- What You Did Well: ONE specific, genuine example from the student's writing. Quote their words if possible. Keep it to 1 sentence.\n"
-        "- Weakness: ONE honest, specific weakness in that area. Be direct but kind. 1 sentence only. If the student did well, write 'No major weakness — keep it up!'.\n"
-        "- Tip: ONE short, clear, actionable tip to fix the weakness. Max 1-2 sentences. Simple words only.\n\n"
+        "- Weakness: ONE clear and specific point about that area. Use simple, kind words. If the student has not tried that part yet, do not criticise them for missing it. Instead, say what they could add later. 1 sentence only. If the student did well, write 'No big problem here — keep going!'.\n"
+        "- Tip: ONE short, clear tip. Use simple words only. Max 1-2 sentences.\n\n"
         "=== PART 2: HOW TO MAKE IT BETTER ===\n"
         "After the table, write a section with this exact heading: ✏️ How to Make It Better\n"
         "For EACH checklist goal reviewed, provide TWO concrete before-and-after examples.\n"
@@ -184,7 +187,7 @@ def build_prompt(writing, student_name, mode, help_values, custom_q):
         "- Always give TWO examples per focus area — never just one.\n"
         "- Quote the student's ACTUAL sentences wherever possible.\n"
         "- Keep improved versions close to the student's original so they feel achievable.\n"
-        "- If the student's email is too short to find two examples, create examples showing what they COULD add.\n"
+        "- If the student only wrote about the problem and did not try to give advice yet, keep the examples focused on understanding the problem. Do not use this part to complain about missing solutions.\n- If the student's email is too short to find two examples, create examples showing what they COULD add.\n"
         "- Use only simple vocabulary appropriate for age 10-11.\n\n"
     )
 
@@ -216,7 +219,7 @@ def get_ai_feedback(prompt: str) -> str:
         messages=[
             {
                 "role": "system",
-                "content": "You are a helpful encouraging writing coach for primary school students aged 10-11. Follow the user prompt exactly and return concise markdown. When writing examples with lines starting with negative, positive, and idea markers, always put each on its own separate line. Never merge them into one paragraph.",
+                "content": "You are a helpful writing coach for primary school students aged 10-11. Use very simple English, short sentences, and easy words for weaker learners. Match comments to what the student actually wrote. If the student only shows understanding of the problem, do not criticise missing advice or solutions. Follow the user prompt exactly and return concise markdown. When writing examples with lines starting with negative, positive, and idea markers, always put each on its own separate line. Never merge them into one paragraph.",
             },
             {"role": "user", "content": prompt},
         ],
