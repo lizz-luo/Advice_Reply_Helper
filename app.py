@@ -220,9 +220,10 @@ def format_feedback_output(text: str) -> str:
 
     table_part, rest = t.split("--- END TABLE ---", 1)
 
+    # 保留表格
     table_lines = [
-        ln for ln in table_part.splitlines()
-        if ln.strip().startswith("|")
+        line for line in table_part.splitlines()
+        if line.strip().startswith("|")
     ]
 
     clean_table = "\n".join(table_lines)
@@ -233,53 +234,37 @@ def format_feedback_output(text: str) -> str:
         ex = ex.split(
             "✏️ How to Make It Better",
             1
-        )[1].strip()
+        )[1]
 
-    # ===== 真正強制切段 =====
+    # ===== 關鍵修正 =====
 
-    ex = re.sub(
-        r"\s*📌\s*",
-        "\n\n📌 ",
-        ex
-    )
+    markers = [
+        "📌",
+        "Example 1:",
+        "Example 2:",
+        "❌",
+        "✅",
+        "💡"
+    ]
 
-    ex = re.sub(
-        r"\s*Example\s*1:",
-        "\n\nExample 1:",
-        ex
-    )
+    for m in markers:
+        ex = ex.replace(
+            m,
+            f"\n\n{m}"
+        )
 
-    ex = re.sub(
-        r"\s*Example\s*2:",
-        "\n\nExample 2:",
-        ex
-    )
-
-    ex = re.sub(
-        r"\s*❌",
-        "\n❌ ",
-        ex
-    )
-
-    ex = re.sub(
-        r"\s*✅",
-        "\n✅ ",
-        ex
-    )
-
-    ex = re.sub(
-        r"\s*💡",
-        "\n💡 ",
-        ex
-    )
-
+    # 清掉過多空行
     ex = re.sub(
         r"\n{3,}",
         "\n\n",
         ex
     )
 
-    ex = ex.replace("\n", "<br>")
+    # HTML強制換行
+    ex = ex.replace(
+        "\n",
+        "<br>"
+    )
 
     output = clean_table
 
@@ -294,7 +279,6 @@ def format_feedback_output(text: str) -> str:
 """
 
     return output.strip()
-
 def get_ai_feedback(prompt: str) -> str:
     client = get_groq_client()
     completion = client.chat.completions.create(
