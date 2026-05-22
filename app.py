@@ -237,8 +237,7 @@ def llm_detect_write_for_me(custom_q: str) -> bool:
         check_prompt = (
             "You are a safeguard for a primary school writing tool. "
             "Decide whether the student is asking the AI to write, complete, rewrite, or finish their work for them, rather than asking for feedback or tips. "
-            f'Student question: "{custom_q}"
-'
+            f'Student question: "{custom_q}"\n'
             "Reply with ONLY one word: YES or NO."
         )
         resp = client.chat.completions.create(
@@ -251,6 +250,7 @@ def llm_detect_write_for_me(custom_q: str) -> bool:
         return answer.startswith("YES")
     except Exception:
         return False
+
 
 def escape_html(s: str) -> str:
     return html.escape(s or "")
