@@ -251,6 +251,7 @@ def llm_detect_write_for_me(custom_q: str) -> bool:
     except Exception:
         return False
 
+
 def escape_html(s: str) -> str:
     return html.escape(s or "")
 
