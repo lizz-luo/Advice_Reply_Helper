@@ -4,6 +4,10 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 import streamlit as st
 from groq import Groq
+try:
+    import markdown as md_lib
+except ImportError:
+    md_lib = None
 
 st.set_page_config(page_title="Advice Reply Helper", page_icon="✉️", layout="centered")
 
@@ -348,6 +352,14 @@ h1{text-align:center;color:#0369a1;margin-bottom:4px}.subtitle{text-align:center
 .info,.session{background:#fff;border:1px solid #bae6fd;border-radius:14px;padding:18px;margin-bottom:18px}.tag{display:inline-block;background:#e0f2fe;border-radius:999px;padding:4px 10px;margin:2px 6px 2px 0;font-size:12px}
 .sample{background:#f8fbff;border:1px solid #dbeafe;padding:12px 14px;border-radius:8px;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
 table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}th{background:#0ea5e9;color:#fff;padding:10px;text-align:left}td{padding:10px;border-bottom:1px solid #dbeafe;vertical-align:top}tr:nth-child(even) td{background:#f8fbff}
+        .feedback-rendered{font-size:14px;line-height:1.75;color:#0c1929}
+        .feedback-rendered p{margin:0.5em 0}
+        .feedback-rendered pre{background:#f0f9ff;padding:10px;border-radius:6px;white-space:pre-wrap;word-break:break-word;font-size:13px}
+        .feedback-rendered table{width:100%;border-collapse:collapse;margin:10px 0}
+        .feedback-rendered th{background:#0ea5e9;color:#fff;padding:8px 10px;text-align:left;font-size:13px}
+        .feedback-rendered td{padding:8px 10px;border-bottom:1px solid #dbeafe;vertical-align:top;font-size:13px}
+        .feedback-rendered tr:nth-child(even) td{background:#f8fbff}
+        .feedback-rendered h2,.feedback-rendered h3{color:#0369a1;margin:1em 0 0.4em}
 </style></head><body>""",
         "<h1>✉️ Advice Reply Helper</h1><div class='subtitle'>Learning Log</div>",
         "<div class='info'>",
@@ -374,7 +386,7 @@ table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}th{backgr
             "<p><strong>My Email:</strong></p>",
             f"<div class='sample'>{escape_html(entry['writing'])}</div>",
             "<p><strong>AI Feedback:</strong></p>",
-            f"<div>{entry['response']}</div>",
+            "<div class=\"feedback-rendered\">" + (md_lib.markdown(entry["response"], extensions=["tables"]) if md_lib else "<pre>" + escape_html(entry["response"]) + "</pre>") + "</div>",
             "</div>",
         ]
     rows.append("</body></html>")
