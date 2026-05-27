@@ -193,7 +193,13 @@ def build_prompt(writing, student_name, mode, help_values, custom_q):
     )
 
     if custom_q:
-        prompt += f"=== STUDENT'S OWN QUESTION ===\n\"{custom_q}\"\nPlease address this question briefly after Part 2.\n\n"
+        prompt += (
+            f"=== STUDENT'S OWN QUESTION ===\n\"{custom_q}\"\n\n"
+            "After Part 2, add a section with the heading: 💬 Your Question\n"
+            "Answer the student's question directly and helpfully based on their actual email.\n"
+            "Give honest, specific feedback referring to what they actually wrote.\n"
+            "Do NOT refuse to answer. Use simple English suitable for age 10-11.\n\n"
+        )
 
     prompt += f"=== STUDENT'S EMAIL ===\n---\n{writing}\n---"
     return prompt
@@ -259,8 +265,22 @@ def llm_detect_write_for_me(custom_q: str) -> bool:
     try:
         client = get_groq_client()
         check_prompt = (
-            "You are a safeguard for a primary school writing tool. "
-            "Decide whether the student is asking the AI to write, complete, rewrite, or finish their work for them, rather than asking for feedback or tips. "
+            "You are a safeguard for a primary school writing tool.\n"
+            "A student has submitted a question. Decide ONLY if the student is clearly trying to get you to "
+            "write, rewrite, or complete their email FOR them.\n\n"
+            "Questions about feedback, grammar, vocabulary, tone, word choices, or asking your opinion on what they wrote are ALLOWED — return NO.\n\n"
+            "Examples that should return YES (cheating):\n"
+            "- \'Can you write the email for me?\'\n"
+            "- \'Finish my email\'\n"
+            "- \'Write a better version for me\'\n"
+            "- \'Give me a sample email I can copy\'\n\n"
+            "Examples that should return NO (allowed questions):\n"
+            "- \'How about my adjective using?\'\n"
+            "- \'Is my tone caring enough?\'\n"
+            "- \'Did I use linking words correctly?\'\n"
+            "- \'How can I improve my greeting?\'\n"
+            "- \'Is my opening sentence good?\'\n"
+            "- \'What do you think of my vocabulary?\'\n\n"
             f'Student question: "{custom_q}"\n'
             "Reply with ONLY one word: YES or NO."
         )
@@ -675,7 +695,7 @@ if submit:
     elif not hvs and not custom_q:
         st.error("Please select at least one checklist goal, or type your own question.")
     elif llm_detect_write_for_me(custom_q):
-        st.warning("I can't write or finish your email for you. Try your best first, then I will give you tips to improve it.")
+        st.warning("⚠️ I can't write or finish your email for you. Try your best first, then I will give you tips to improve it.")
     else:
         prompt      = build_prompt(writing, name, md, hvs, custom_q)
         goal_labels = [goal_label_map.get(v, v) for v in hvs]
