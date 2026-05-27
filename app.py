@@ -528,15 +528,17 @@ if scroll_target or trigger_auto_download:
         }} catch (e) {{}}
       }}
 
-      function triggerDownloadOnce() {{
-        if (!doDownload || parentWin.__saveLogAutoClicked) return;
-        const buttons = Array.from(parentDoc.querySelectorAll('button'));
-        const saveBtn = buttons.find(btn => btn.innerText && btn.innerText.includes('Save Learning Log'));
-        if (saveBtn) {{
-          parentWin.__saveLogAutoClicked = true;
-          saveBtn.click();
+        function triggerDownloadOnce() {{
+          if (!doDownload) return;
+          const tokenKey = '__saveLogToken_' + {st.session_state.interaction_count};
+          if (parentWin[tokenKey]) return;
+          const buttons = Array.from(parentDoc.querySelectorAll('button'));
+          const saveBtn = buttons.find(btn => btn.innerText && btn.innerText.includes('Save Learning Log'));
+          if (saveBtn) {{
+            parentWin[tokenKey] = true;
+            saveBtn.click();
+          }}
         }}
-      }}
 
       [120, 350, 800, 1400].forEach((delay) => {{
         setTimeout(() => {{
